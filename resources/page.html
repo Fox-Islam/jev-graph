@@ -288,7 +288,12 @@ function networkControls() {
     h('div', { class: 'row' },
       h('div', {}, select('network', 'Preset', [...Object.keys(catalog.graphs), 'blank'])),
       h('div', { style: 'flex: 0 0 auto; align-self: end' }, h('div', { class: 'actions', style: 'margin: 0' },
-        h('button', { class: 'secondary', onclick: () => { design = { ...presetDesign(form.network), preset: form.network }; selected = null; designChanged(); } }, 'Load')))),
+        h('button', { class: 'secondary', onclick: () => { design = { ...presetDesign(form.network), preset: form.network }; selected = null; importError = null; designChanged(); } }, 'Load')))),
+    h('div', { class: 'actions', style: 'margin: 8px 0 0' },
+      h('button', { class: 'secondary', onclick: exportDesign }, 'Export'),
+      h('button', { class: 'secondary', onclick: () => $('#import-file').click() }, 'Import'),
+      h('input', { id: 'import-file', type: 'file', accept: '.json,application/json', hidden: '', onchange: e => importDesign(e.target) })),
+    importError ? h('p', { class: 'error', style: 'margin: 8px 0 0' }, importError) : null,
     ...currentControls(),
     h('p', { class: 'hint' }, `${plural(allNodes().length, 'node')} in ${plural(design.layers.length, 'layer')}. A truth table will run ${plural(rowCount(), 'row')}`),
     Object.keys(issues).length ? h('ul', { class: 'problems' }, Object.entries(issues).map(([n, e]) => h('li', {}, `${n} ${e}`))) : null,
@@ -494,6 +499,37 @@ function migrate(d) {
   d.every ??= 1;
   return d;
 }
+// A graph saved as a file is the spec composable-jev's Graph::fromSpec() reads, with the page's
+// own settings beside it: the inputs the next tick runs with, and the tick interval.
+let importError = null;
+function exportDesign() {
+  const { preset, ...graph } = design;
+  const file = new Blob([JSON.stringify({ ...graph, contexts: texts() }, null, 2) + '\n'], { type: 'application/json' });
+  const link = h('a', { href: URL.createObjectURL(file), download: `${(preset || 'graph').replace(/[^a-z0-9-]+/gi, '-')}.json` });
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(link.href);
+}
+async function importDesign(input) {
+  const [file] = input.files;
+  input.value = '';
+  if (!file) return;
+  try {
+    const d = JSON.parse(await file.text());
+    if (!Array.isArray(d?.inputs) || !Array.isArray(d?.layers) || d.layers.some(l => !Array.isArray(l))) {
+      throw new Error('it holds no graph: a graph has a list of inputs and a list of layers');
+    }
+    design = migrate(d);
+    delete design.preset;
+    selected = null;
+    importError = null;
+  } catch (e) {
+    importError = `Could not import ${file.name}: ${e instanceof SyntaxError ? 'it is not JSON' : e.message}`;
+  }
+  designChanged();
+}
+
 function loadDesign() {
   try {
     const d = JSON.parse(localStorage.getItem('jev-perceptron-design'));
