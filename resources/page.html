@@ -569,7 +569,18 @@ const texts = () => design.contexts.filter(t => typeof t !== 'string' || t.trim(
 const inputSignals = () => [...design.inputs, ...(design.contexts.length ? [TEXT] : []), ...(design.time ? [TIME] : [])];
 const rowCount = () => Math.max(1, texts().length) * 2 ** design.inputs.length;
 const allNodes = () => design.layers.flat();
-const signalNames = () => [...inputSignals(), ...allNodes().map(n => n.name)];
+// A choice's options and a score's levels are parts of the node, read as `team.billing` or
+// `severity.2`; a later question reads the option picked, or the score, as the node's name.
+function partsOf(n) {
+  if (n.preset === 'choice') return Object.keys(n.options ?? {}).map(o => `${n.name}.${o}`);
+  if (n.preset === 'score') return (n.levels ?? []).map((_l, i) => `${n.name}.${i}`);
+  return [];
+}
+const baseOf = signal => signal.split('.')[0];
+const signalNames = () => [...inputSignals(), ...allNodes().flatMap(n => [n.name, ...partsOf(n)])];
+// Questions written by hand: the kinds that can read the context, and that the simulator cannot answer.
+const WRITTEN = ['custom', 'choice', 'score'];
+const offers = kind => (catalog?.primitives ?? ['noul']).includes(kind);
 function findNode(name) {
   for (const [L, layer] of design.layers.entries()) {
     const i = layer.findIndex(n => n.name === name);
@@ -581,7 +592,7 @@ function findNode(name) {
 // The nodes that can reach themselves: these are asked every tick, and need a starting value.
 function loopNodes() {
   const readers = {};
-  for (const n of allNodes()) for (const r of n.reads) (readers[r] ||= []).push(n.name);
+  for (const n of allNodes()) for (const r of n.reads) (readers[baseOf(r)] ||= []).push(n.name);
   const inLoop = new Set();
   for (const n of allNodes()) {
     const seen = new Set(), stack = [...(readers[n.name] || [])];
@@ -624,6 +635,7 @@ const rules = () => catalog?.rules ?? {};
 const isRule = preset => preset in rules();
 function textOf(n) {
   if (n.preset === 'custom') return { instructions: n.instructions, yes: n.yes, no: n.no };
+  if (n.preset === 'choice' || n.preset === 'score') return { instructions: n.instructions ?? '', yes: '', no: '' };
   if (!n.reads.length) return { instructions: '', yes: '', no: '' };
   if (isRule(n.preset)) {
     const describe = renderTemplate(rules()[n.preset].describe, n.reads)
@@ -639,7 +651,17 @@ function textOf(n) {
 }
 function nodeLabel(n) {
   if (isRule(n.preset)) return rules()[n.preset].glyph.replaceAll('{n}', String(n.n ?? 1));
-  return { weighted: 'Σ', custom: '?', majority: 'maj' }[n.preset] ?? n.preset;
+  if (n.preset === 'score') return `0–${Math.max(0, (n.levels ?? []).length - 1)}`;
+  return { weighted: 'Σ', custom: '?', choice: 'pick', majority: 'maj' }[n.preset] ?? n.preset;
+}
+// What a node's value looks like: its shade from 0 to 1, and its text. A choice is shaded by the
+// chance of the option it picked, a score by where it sits on its scale.
+function nodeShown(n, signals) {
+  const p = signals?.[n.name];
+  if (typeof p === 'string') return { shade: signals[`${n.name}.${p}`] ?? 1, text: p };
+  if (typeof p !== 'number') return { shade: null, text: '' };
+  if (n.preset === 'score') return { shade: p / Math.max(1, (n.levels ?? []).length - 1), text: p.toFixed(2) };
+  return { shade: p, text: fmt(p) };
 }
 const asksJev = n => !isRule(n.preset);
 
@@ -647,12 +669,20 @@ function nodeProblem(n, seen, known) {
   const bad = n.reads.filter(r => !known.includes(r)), t = catalog.templates[n.preset];
   if (seen.has(n.name)) return 'shares its name with another signal';
   if (bad.includes(TEXT)) return 'reads the context, but there are no contexts yet';
-  if (n.preset !== 'custom' && n.reads.includes(TEXT)) return `is ${isRule(n.preset) ? rules()[n.preset].label : `a ${n.preset === 'weighted' ? 'weighted sum' : n.preset}`}, which works on numbers`;
+  const picked = n.reads.find(r => findNode(r)?.node.preset === 'choice');
+  if (picked && !WRITTEN.includes(n.preset)) return `reads the option ${picked} picked, which is a word; read one option's chance, such as ${partsOf(findNode(picked).node)[0] ?? `${picked}.option`}`;
+  if (!WRITTEN.includes(n.preset) && n.reads.includes(TEXT)) return `is ${isRule(n.preset) ? rules()[n.preset].label : `a ${n.preset === 'weighted' ? 'weighted sum' : n.preset}`}, which works on numbers`;
   if (bad.length) return `reads ${bad.join(', ')}, which is not an input or a node`;
   if (!n.reads.length) return 'reads nothing';
   if (t?.arity === 1 && n.reads.length !== 1) return `is ${n.preset}, which reads exactly one signal`;
   if (t?.arity === 2 && n.reads.length < 2) return `is ${n.preset}, which reads two or more signals`;
-  if (n.preset === 'custom' && !n.instructions.trim()) return 'has no question';
+  if (WRITTEN.includes(n.preset) && !(n.instructions ?? '').trim()) return 'has no question';
+  if (n.preset === 'choice') {
+    const names = Object.keys(n.options ?? {});
+    if (names.length < 2) return 'needs two or more options';
+    if (names.some(o => !NODE_NAME.test(o))) return 'has an option name that is not a lowercase letter, then up to 11 letters, digits or _';
+  }
+  if (n.preset === 'score' && (n.levels ?? []).length < 2) return 'needs two or more levels';
   if (n.preset === 'atLeast' && !(n.n >= 1 && n.n <= n.reads.length)) return `needs at least 1, and no more than the ${n.reads.length} signals it reads`;
   if (n.preset === 'average' && (n.weights.some(w => w < 0) || !(n.weights.reduce((a, b) => a + b, 0) > 0))) return 'needs weights of 0 or more, not all 0';
   return null;
@@ -893,11 +923,12 @@ function pulse(name) {
 }
 const fillFor = p => typeof p !== 'number' ? 'var(--lo)' : `color-mix(in oklab, var(--hi) ${Math.round(p * 100)}%, var(--lo))`;
 function setNodeValue(name, p) {
-  const el = nodeEls[name];
-  if (!el || !el.value) return;
-  el.shape.setAttribute('fill', fillFor(p));
-  el.value.textContent = typeof p === 'number' ? fmt(p) : '';
-  el.label.style.fill = p > 0.5 ? '#fff' : 'var(--ink)';
+  const el = nodeEls[name], n = findNode(name)?.node;
+  if (!el || !el.value || !n) return;
+  const shown = nodeShown(n, { [name]: p });
+  el.shape.setAttribute('fill', fillFor(shown.shade));
+  el.value.textContent = shown.text;
+  el.label.style.fill = shown.shade > 0.5 ? '#fff' : 'var(--ink)';
 }
 // The diagram alone, for a new step mid-run; the table and the rest are left alone.
 function redrawGraph() {
@@ -970,8 +1001,8 @@ function builderGraph() {
   defs.append(marker, markerLit);
   nodeEls = {};
 
-  for (const n of allNodes()) for (const src of n.reads) {
-    const a = pos[src], b = pos[n.name];
+  for (const n of allNodes()) for (const read of n.reads) {
+    const src = baseOf(read), a = pos[src], b = pos[n.name];
     if (!a) continue;
     const lit = n.name === selected || src === selected, R = 26;
     let d;
@@ -979,7 +1010,7 @@ function builderGraph() {
     else if (colOf[n.name] > colOf[src]) {
       const mx = (a.x + b.x) / 2;
       d = `M${a.x + 22},${a.y} C${mx},${a.y} ${mx},${b.y} ${b.x - R},${b.y}`;
-    } else if (colOf[n.name] < colOf[src] && !findNode(src)?.node.reads.includes(n.name)) {
+    } else if (colOf[n.name] < colOf[src] && !findNode(src)?.node.reads.some(r => baseOf(r) === n.name)) {
       // To an earlier layer: out of the left, into the right. Where the two read each
       // other, this would sit on the wire going the other way, so it loops round below.
       const mx = (a.x + b.x) / 2;
@@ -1051,19 +1082,19 @@ function builderGraph() {
   }
 
   for (const n of allNodes()) {
-    const { x, y } = pos[n.name], p = row?.signals[n.name], want = row?.ideal?.[n.name];
+    const { x, y } = pos[n.name], p = row?.signals[n.name], want = row?.ideal?.[n.name], shown = nodeShown(n, row?.signals);
     const wrong = typeof p === 'number' && want != null && (p > 0.5) !== (want > 0.5), isSelected = n.name === selected;
     const stuck = unsettled.has(n.name), bad = issues[n.name] || wrong || stuck;
     // A node worked out in code is drawn square, so what costs a call is what is round.
-    const look = { fill: fillFor(p),
+    const look = { fill: fillFor(shown.shade),
       stroke: stuck ? 'var(--warn)' : bad ? 'var(--off)' : isSelected ? 'var(--accent)' : 'var(--line)',
       'stroke-width': bad || isSelected ? 3 : 1, 'stroke-dasharray': issues[n.name] || stuck ? '4 3' : 'none' };
     const circle = asksJev(n) ? s('circle', { cx: x, cy: y, r: 24, ...look })
       : s('rect', { class: 'code', x: x - 22, y: y - 22, width: 44, height: 44, rx: 10, ...look });
     circle.append(s('title', {}, issues[n.name] ? `${n.name} ${issues[n.name]}` : stuck ? `${n.name} is in a loop still moving` : textOf(n).instructions));
     const g = button(s('g', { class: 'node' }), `Edit ${n.name}`, () => selectSignal(n.name));
-    const label = s('text', { x, y: y + 5, 'text-anchor': 'middle', style: `font-weight: 600; fill: ${p > 0.5 ? '#fff' : 'var(--ink)'}` }, nodeLabel(n));
-    const value = s('text', { x, y: y + 42, 'text-anchor': 'middle', class: 'muted' }, typeof p === 'number' ? fmt(p) + (wrong ? ' ✗' : '') : '');
+    const label = s('text', { x, y: y + 5, 'text-anchor': 'middle', style: `font-weight: 600; fill: ${shown.shade > 0.5 ? '#fff' : 'var(--ink)'}` }, nodeLabel(n));
+    const value = s('text', { x, y: y + 42, 'text-anchor': 'middle', class: 'muted' }, shown.text + (wrong ? ' ✗' : ''));
     g.append(s('circle', { class: 'spin', cx: x, cy: y, r: 30 }), circle, label,
       s('text', { x, y: y - 30, 'text-anchor': 'middle', style: isSelected ? 'fill: var(--accent); font-weight: 600' : null },
         looped.has(n.name) ? `${n.name} ↻` : n.name), value);
@@ -1133,9 +1164,10 @@ function builderTable() {
       }),
       nodeCols.map(k => {
         const want = r.ideal[k], wrong = want != null && (r.signals[k] > 0.5) !== (want > 0.5);
-        return h('td', { class: wrong ? 'bad-cell' : null, style: `background: ${heat(r.signals[k])}`,
+        const shown = nodeShown(findNode(k).node, r.signals);
+        return h('td', { class: wrong ? 'bad-cell' : null, style: `background: ${heat(shown.shade ?? 0)}`,
           title: want == null ? 'no rule to check against' : `want ${want}` },
-          fmt(r.signals[k]) + (wrong ? ' ✗' : ''));
+          shown.text + (wrong ? ' ✗' : ''));
       }));
   });
   return h('table', {}, h('thead', {}, head), h('tbody', {}, body));
@@ -1236,6 +1268,7 @@ function renderNodeEditor(panel, found) {
       h('option', { value: g, selected: n.preset === g ? '' : false }, g))),
     h('option', { value: 'weighted', selected: n.preset === 'weighted' ? '' : false }, 'weighted sum'),
     h('option', { value: 'custom', selected: n.preset === 'custom' ? '' : false }, 'custom question'),
+    ...['choice', 'score'].filter(offers).map(k => h('option', { value: k, selected: n.preset === k ? '' : false }, `${k} question`)),
     Object.keys(rules()).length ? h('optgroup', { label: 'Worked out in code' }, Object.entries(rules()).map(([r, t]) =>
       h('option', { value: r, selected: n.preset === r ? '' : false }, t.label))) : null,
   ].filter(Boolean);
@@ -1289,7 +1322,17 @@ function renderNodeEditor(panel, found) {
         onclick: () => { n.start = v; designChanged(); } }, v ? 'on' : 'off'))));
   }
 
-  if (isRule(n.preset)) parts.push(
+  if (n.preset === 'choice' || n.preset === 'score') parts.push(
+    h('label', { for: 'ed-q' }, 'Question'),
+    h('textarea', { id: 'ed-q', oninput: e => editText(n, 'instructions', e.target.value) }),
+    ...(n.preset === 'choice' ? choiceFields(n) : scoreFields(n)),
+    h('p', { class: 'note' }, n.preset === 'choice'
+      ? `A later question reads the option picked as ${n.name}; code reads each option's chance as ${n.name}.option`
+      : `A later question reads the score as ${n.name}; code reads each level's chance as ${n.name}.0, ${n.name}.1 and so on`),
+    problem ? h('p', { class: 'error', style: 'margin: 10px 0 0' }, `${n.name} ${problem}`) : null,
+    h('p', { id: 'ed-error', class: 'error', style: 'margin: 10px 0 0' }),
+  );
+  else if (isRule(n.preset)) parts.push(
     h('label', {}, 'Works out'),
     h('p', { id: 'ed-q', class: 'rule-text' }, text.instructions),
     h('p', { class: 'note rule' }, 'Worked out in code, so it costs no call and is exact'),
@@ -1314,9 +1357,53 @@ function renderNodeEditor(panel, found) {
   if (!isRule(n.preset)) $('#ed-q').value = text.instructions;
 }
 
+// A choice's options, each a name and what it means, and a score's levels, lowest first.
+function choiceFields(n) {
+  const entries = Object.entries(n.options ?? {});
+  return [
+    h('label', {}, 'Options'),
+    ...entries.map(([name, meaning], i) => h('div', { class: 'text-row' },
+      h('input', { id: `ed-opt-${i}`, 'aria-label': `Option ${i + 1}'s name`, value: name, style: 'flex: 0 0 110px',
+        onchange: e => renameOption(n, name, e.target.value.trim(), e.target) }),
+      h('input', { id: `ed-optd-${i}`, 'aria-label': `What option ${i + 1} means`, value: meaning, placeholder: 'What it means',
+        oninput: e => { n.options[name] = e.target.value; designChanged({ editor: false }); } }),
+      entries.length > 2 ? h('button', { class: 'remove', 'aria-label': `Remove option ${name}`,
+        onclick: () => { delete n.options[name]; designChanged(); } }, '×') : null)),
+    h('div', { class: 'actions', style: 'margin-top: 6px' }, h('button', { class: 'secondary', onclick: () => {
+      let i = entries.length + 1;
+      while (`option${i}` in n.options) i++;
+      n.options[`option${i}`] = '';
+      designChanged();
+    } }, 'Add an option')),
+  ];
+}
+function scoreFields(n) {
+  return [
+    h('label', {}, 'Levels', h('span', { style: 'font-weight: 400' }, ' · lowest first')),
+    ...n.levels.map((level, i) => h('div', { class: 'text-row' },
+      h('span', { style: 'flex: 0 0 24px; margin-top: 6px; text-align: right' }, String(i)),
+      h('input', { id: `ed-lvl-${i}`, 'aria-label': `What a score of ${i} means`, value: level, placeholder: 'What this score means',
+        oninput: e => { n.levels[i] = e.target.value; designChanged({ editor: false }); } }),
+      n.levels.length > 2 ? h('button', { class: 'remove', 'aria-label': `Remove level ${i}`,
+        onclick: () => { n.levels.splice(i, 1); designChanged(); } }, '×') : null)),
+    h('div', { class: 'actions', style: 'margin-top: 6px' }, h('button', { class: 'secondary', onclick: () => { n.levels.push(''); designChanged(); } }, 'Add a level')),
+  ];
+}
+// Renames an option, where it sits in the list, and in every node reading it.
+function renameOption(n, old, name, input) {
+  if (name === old) return;
+  const error = !NODE_NAME.test(name) ? 'An option name is a lowercase letter, then up to 11 letters, digits or _'
+    : name in n.options ? `${n.name} already has an option ${name}` : null;
+  if (error) { $('#ed-error').textContent = error; input.value = old; return; }
+  n.options = Object.fromEntries(Object.entries(n.options).map(([k, v]) => [k === old ? name : k, v]));
+  for (const x of allNodes()) x.reads = x.reads.map(r => r === `${n.name}.${old}` ? `${n.name}.${name}` : r);
+  designChanged();
+}
+
 function refreshText(n) {
   const text = textOf(n);
   if (isRule(n.preset)) { $('#ed-q').textContent = text.instructions; return; }
+  if (n.preset === 'choice' || n.preset === 'score') { $('#ed-q').value = text.instructions; return; }
   $('#ed-q').value = text.instructions; $('#ed-yes').value = text.yes; $('#ed-no').value = text.no;
 }
 
@@ -1329,7 +1416,12 @@ function toggleRead(n, src) {
 
 function setPreset(n, preset) {
   // Keep the question it was asking; a rule was asking none.
-  if (preset === 'custom') Object.assign(n, isRule(n.preset) ? { instructions: '', yes: '', no: '' } : textOf(n));
+  if (WRITTEN.includes(preset)) {
+    const asked = isRule(n.preset) ? '' : textOf(n).instructions;
+    Object.assign(n, preset === 'custom' ? { yes: '', no: '', ...(n.preset === 'custom' ? {} : textOf(n)), instructions: asked } : { instructions: asked });
+  }
+  if (preset === 'choice' && !n.options) n.options = { yes: 'It is', no: 'It is not' };
+  if (preset === 'score' && !n.levels) n.levels = ['None', 'Some', 'All'];
   if (preset === 'weighted' && n.preset !== 'weighted') { n.weights = n.reads.map(() => 1); n.bias = n.reads.length - 0.5; }
   if (preset === 'average' && n.preset !== 'average') n.weights = n.reads.map(() => 1);
   if (preset === 'atLeast') n.n = Math.min(Math.max(1, n.n ?? 2), Math.max(1, n.reads.length));
@@ -1339,7 +1431,7 @@ function setPreset(n, preset) {
 
 // Typing in a preset's question makes it custom, starting from the words it had.
 function editText(n, field, value) {
-  const wasPreset = n.preset !== 'custom';
+  const wasPreset = !WRITTEN.includes(n.preset);
   if (wasPreset) { Object.assign(n, textOf(n)); n.preset = 'custom'; }
   n[field] = value;
   designChanged({ editor: wasPreset });
@@ -1354,8 +1446,8 @@ function renameSignal(old, name, input) {
 
   const word = new RegExp(`\\b${old}\\b`, 'g');
   for (const x of allNodes()) {
-    if (!x.reads.includes(old)) continue;
-    x.reads = x.reads.map(r => r === old ? name : r);
+    if (!x.reads.some(r => baseOf(r) === old)) continue;
+    x.reads = x.reads.map(r => r === old ? name : r.startsWith(`${old}.`) ? `${name}${r.slice(old.length)}` : r);
     if (x.preset === 'custom') for (const f of ['instructions', 'yes', 'no']) x[f] = x[f].replace(word, name);
   }
   const node = findNode(old);

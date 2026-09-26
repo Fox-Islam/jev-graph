@@ -63,6 +63,7 @@ final readonly class App
             'templates' => Gates::templates(),
             'rules' => Rules::templates(),
             'graphs' => self::graphs(),
+            'primitives' => ['noul', 'choice', 'score'],
             'providers' => array_combine(
                 array_map(fn (Provider $p) => $p->value, Provider::cases()),
                 array_map(fn (Provider $p) => ['label' => self::label($p), 'server' => $this->held[$p->value] ?? false], Provider::cases()),
