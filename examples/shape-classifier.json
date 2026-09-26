@@ -1,0 +1,1160 @@
+{
+  "inputs": [
+    "p0a",
+    "p0b",
+    "p0c",
+    "p0d",
+    "p0e",
+    "p1a",
+    "p1b",
+    "p1c",
+    "p1d",
+    "p1e",
+    "p2a",
+    "p2b",
+    "p2c",
+    "p2d",
+    "p2e",
+    "p3a",
+    "p3b",
+    "p3c",
+    "p3d",
+    "p3e",
+    "p4a",
+    "p4b",
+    "p4c",
+    "p4d",
+    "p4e"
+  ],
+  "layers": [
+    [
+      {
+        "name": "sv00",
+        "preset": "custom",
+        "reads": [
+          "p0a",
+          "p1a",
+          "p2a"
+        ],
+        "instructions": "p0a, p1a and p2a are three pixels one above the other, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sv01",
+        "preset": "custom",
+        "reads": [
+          "p0b",
+          "p1b",
+          "p2b"
+        ],
+        "instructions": "p0b, p1b and p2b are three pixels one above the other, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sv02",
+        "preset": "custom",
+        "reads": [
+          "p0c",
+          "p1c",
+          "p2c"
+        ],
+        "instructions": "p0c, p1c and p2c are three pixels one above the other, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sv03",
+        "preset": "custom",
+        "reads": [
+          "p0d",
+          "p1d",
+          "p2d"
+        ],
+        "instructions": "p0d, p1d and p2d are three pixels one above the other, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sv04",
+        "preset": "custom",
+        "reads": [
+          "p0e",
+          "p1e",
+          "p2e"
+        ],
+        "instructions": "p0e, p1e and p2e are three pixels one above the other, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sv10",
+        "preset": "custom",
+        "reads": [
+          "p1a",
+          "p2a",
+          "p3a"
+        ],
+        "instructions": "p1a, p2a and p3a are three pixels one above the other, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sv11",
+        "preset": "custom",
+        "reads": [
+          "p1b",
+          "p2b",
+          "p3b"
+        ],
+        "instructions": "p1b, p2b and p3b are three pixels one above the other, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sv12",
+        "preset": "custom",
+        "reads": [
+          "p1c",
+          "p2c",
+          "p3c"
+        ],
+        "instructions": "p1c, p2c and p3c are three pixels one above the other, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sv13",
+        "preset": "custom",
+        "reads": [
+          "p1d",
+          "p2d",
+          "p3d"
+        ],
+        "instructions": "p1d, p2d and p3d are three pixels one above the other, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sv14",
+        "preset": "custom",
+        "reads": [
+          "p1e",
+          "p2e",
+          "p3e"
+        ],
+        "instructions": "p1e, p2e and p3e are three pixels one above the other, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sv20",
+        "preset": "custom",
+        "reads": [
+          "p2a",
+          "p3a",
+          "p4a"
+        ],
+        "instructions": "p2a, p3a and p4a are three pixels one above the other, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sv21",
+        "preset": "custom",
+        "reads": [
+          "p2b",
+          "p3b",
+          "p4b"
+        ],
+        "instructions": "p2b, p3b and p4b are three pixels one above the other, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sv22",
+        "preset": "custom",
+        "reads": [
+          "p2c",
+          "p3c",
+          "p4c"
+        ],
+        "instructions": "p2c, p3c and p4c are three pixels one above the other, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sv23",
+        "preset": "custom",
+        "reads": [
+          "p2d",
+          "p3d",
+          "p4d"
+        ],
+        "instructions": "p2d, p3d and p4d are three pixels one above the other, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sv24",
+        "preset": "custom",
+        "reads": [
+          "p2e",
+          "p3e",
+          "p4e"
+        ],
+        "instructions": "p2e, p3e and p4e are three pixels one above the other, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sh00",
+        "preset": "custom",
+        "reads": [
+          "p0a",
+          "p0b",
+          "p0c"
+        ],
+        "instructions": "p0a, p0b and p0c are three pixels side by side, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sh01",
+        "preset": "custom",
+        "reads": [
+          "p0b",
+          "p0c",
+          "p0d"
+        ],
+        "instructions": "p0b, p0c and p0d are three pixels side by side, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sh02",
+        "preset": "custom",
+        "reads": [
+          "p0c",
+          "p0d",
+          "p0e"
+        ],
+        "instructions": "p0c, p0d and p0e are three pixels side by side, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sh10",
+        "preset": "custom",
+        "reads": [
+          "p1a",
+          "p1b",
+          "p1c"
+        ],
+        "instructions": "p1a, p1b and p1c are three pixels side by side, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sh11",
+        "preset": "custom",
+        "reads": [
+          "p1b",
+          "p1c",
+          "p1d"
+        ],
+        "instructions": "p1b, p1c and p1d are three pixels side by side, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sh12",
+        "preset": "custom",
+        "reads": [
+          "p1c",
+          "p1d",
+          "p1e"
+        ],
+        "instructions": "p1c, p1d and p1e are three pixels side by side, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sh20",
+        "preset": "custom",
+        "reads": [
+          "p2a",
+          "p2b",
+          "p2c"
+        ],
+        "instructions": "p2a, p2b and p2c are three pixels side by side, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sh21",
+        "preset": "custom",
+        "reads": [
+          "p2b",
+          "p2c",
+          "p2d"
+        ],
+        "instructions": "p2b, p2c and p2d are three pixels side by side, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sh22",
+        "preset": "custom",
+        "reads": [
+          "p2c",
+          "p2d",
+          "p2e"
+        ],
+        "instructions": "p2c, p2d and p2e are three pixels side by side, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sh30",
+        "preset": "custom",
+        "reads": [
+          "p3a",
+          "p3b",
+          "p3c"
+        ],
+        "instructions": "p3a, p3b and p3c are three pixels side by side, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sh31",
+        "preset": "custom",
+        "reads": [
+          "p3b",
+          "p3c",
+          "p3d"
+        ],
+        "instructions": "p3b, p3c and p3d are three pixels side by side, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sh32",
+        "preset": "custom",
+        "reads": [
+          "p3c",
+          "p3d",
+          "p3e"
+        ],
+        "instructions": "p3c, p3d and p3e are three pixels side by side, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sh40",
+        "preset": "custom",
+        "reads": [
+          "p4a",
+          "p4b",
+          "p4c"
+        ],
+        "instructions": "p4a, p4b and p4c are three pixels side by side, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sh41",
+        "preset": "custom",
+        "reads": [
+          "p4b",
+          "p4c",
+          "p4d"
+        ],
+        "instructions": "p4b, p4c and p4d are three pixels side by side, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      },
+      {
+        "name": "sh42",
+        "preset": "custom",
+        "reads": [
+          "p4c",
+          "p4d",
+          "p4e"
+        ],
+        "instructions": "p4c, p4d and p4e are three pixels side by side, 1.0 dark and 0.0 light. Are all three dark?",
+        "yes": "All three pixels are dark.",
+        "no": "At least one of the pixels is light."
+      }
+    ],
+    [
+      {
+        "name": "v00",
+        "preset": "any",
+        "reads": [
+          "sv00",
+          "sv01",
+          "sv02"
+        ]
+      },
+      {
+        "name": "h00",
+        "preset": "any",
+        "reads": [
+          "sh00",
+          "sh10",
+          "sh20"
+        ]
+      },
+      {
+        "name": "x00",
+        "preset": "all",
+        "reads": [
+          "sv01",
+          "sh10"
+        ]
+      },
+      {
+        "name": "v01",
+        "preset": "any",
+        "reads": [
+          "sv01",
+          "sv02",
+          "sv03"
+        ]
+      },
+      {
+        "name": "h01",
+        "preset": "any",
+        "reads": [
+          "sh01",
+          "sh11",
+          "sh21"
+        ]
+      },
+      {
+        "name": "x01",
+        "preset": "all",
+        "reads": [
+          "sv02",
+          "sh11"
+        ]
+      },
+      {
+        "name": "v02",
+        "preset": "any",
+        "reads": [
+          "sv02",
+          "sv03",
+          "sv04"
+        ]
+      },
+      {
+        "name": "h02",
+        "preset": "any",
+        "reads": [
+          "sh02",
+          "sh12",
+          "sh22"
+        ]
+      },
+      {
+        "name": "x02",
+        "preset": "all",
+        "reads": [
+          "sv03",
+          "sh12"
+        ]
+      },
+      {
+        "name": "v10",
+        "preset": "any",
+        "reads": [
+          "sv10",
+          "sv11",
+          "sv12"
+        ]
+      },
+      {
+        "name": "h10",
+        "preset": "any",
+        "reads": [
+          "sh10",
+          "sh20",
+          "sh30"
+        ]
+      },
+      {
+        "name": "x10",
+        "preset": "all",
+        "reads": [
+          "sv11",
+          "sh20"
+        ]
+      },
+      {
+        "name": "v11",
+        "preset": "any",
+        "reads": [
+          "sv11",
+          "sv12",
+          "sv13"
+        ]
+      },
+      {
+        "name": "h11",
+        "preset": "any",
+        "reads": [
+          "sh11",
+          "sh21",
+          "sh31"
+        ]
+      },
+      {
+        "name": "x11",
+        "preset": "all",
+        "reads": [
+          "sv12",
+          "sh21"
+        ]
+      },
+      {
+        "name": "v12",
+        "preset": "any",
+        "reads": [
+          "sv12",
+          "sv13",
+          "sv14"
+        ]
+      },
+      {
+        "name": "h12",
+        "preset": "any",
+        "reads": [
+          "sh12",
+          "sh22",
+          "sh32"
+        ]
+      },
+      {
+        "name": "x12",
+        "preset": "all",
+        "reads": [
+          "sv13",
+          "sh22"
+        ]
+      },
+      {
+        "name": "v20",
+        "preset": "any",
+        "reads": [
+          "sv20",
+          "sv21",
+          "sv22"
+        ]
+      },
+      {
+        "name": "h20",
+        "preset": "any",
+        "reads": [
+          "sh20",
+          "sh30",
+          "sh40"
+        ]
+      },
+      {
+        "name": "x20",
+        "preset": "all",
+        "reads": [
+          "sv21",
+          "sh30"
+        ]
+      },
+      {
+        "name": "v21",
+        "preset": "any",
+        "reads": [
+          "sv21",
+          "sv22",
+          "sv23"
+        ]
+      },
+      {
+        "name": "h21",
+        "preset": "any",
+        "reads": [
+          "sh21",
+          "sh31",
+          "sh41"
+        ]
+      },
+      {
+        "name": "x21",
+        "preset": "all",
+        "reads": [
+          "sv22",
+          "sh31"
+        ]
+      },
+      {
+        "name": "v22",
+        "preset": "any",
+        "reads": [
+          "sv22",
+          "sv23",
+          "sv24"
+        ]
+      },
+      {
+        "name": "h22",
+        "preset": "any",
+        "reads": [
+          "sh22",
+          "sh32",
+          "sh42"
+        ]
+      },
+      {
+        "name": "x22",
+        "preset": "all",
+        "reads": [
+          "sv23",
+          "sh32"
+        ]
+      },
+      {
+        "name": "k000",
+        "preset": "all",
+        "reads": [
+          "sv00",
+          "sh00"
+        ]
+      },
+      {
+        "name": "k001",
+        "preset": "all",
+        "reads": [
+          "sv00",
+          "sh20"
+        ]
+      },
+      {
+        "name": "k002",
+        "preset": "all",
+        "reads": [
+          "sv02",
+          "sh00"
+        ]
+      },
+      {
+        "name": "k003",
+        "preset": "all",
+        "reads": [
+          "sv02",
+          "sh20"
+        ]
+      },
+      {
+        "name": "k010",
+        "preset": "all",
+        "reads": [
+          "sv01",
+          "sh01"
+        ]
+      },
+      {
+        "name": "k011",
+        "preset": "all",
+        "reads": [
+          "sv01",
+          "sh21"
+        ]
+      },
+      {
+        "name": "k012",
+        "preset": "all",
+        "reads": [
+          "sv03",
+          "sh01"
+        ]
+      },
+      {
+        "name": "k013",
+        "preset": "all",
+        "reads": [
+          "sv03",
+          "sh21"
+        ]
+      },
+      {
+        "name": "k020",
+        "preset": "all",
+        "reads": [
+          "sv02",
+          "sh02"
+        ]
+      },
+      {
+        "name": "k021",
+        "preset": "all",
+        "reads": [
+          "sv02",
+          "sh22"
+        ]
+      },
+      {
+        "name": "k022",
+        "preset": "all",
+        "reads": [
+          "sv04",
+          "sh02"
+        ]
+      },
+      {
+        "name": "k023",
+        "preset": "all",
+        "reads": [
+          "sv04",
+          "sh22"
+        ]
+      },
+      {
+        "name": "k100",
+        "preset": "all",
+        "reads": [
+          "sv10",
+          "sh10"
+        ]
+      },
+      {
+        "name": "k101",
+        "preset": "all",
+        "reads": [
+          "sv10",
+          "sh30"
+        ]
+      },
+      {
+        "name": "k102",
+        "preset": "all",
+        "reads": [
+          "sv12",
+          "sh10"
+        ]
+      },
+      {
+        "name": "k103",
+        "preset": "all",
+        "reads": [
+          "sv12",
+          "sh30"
+        ]
+      },
+      {
+        "name": "k110",
+        "preset": "all",
+        "reads": [
+          "sv11",
+          "sh11"
+        ]
+      },
+      {
+        "name": "k111",
+        "preset": "all",
+        "reads": [
+          "sv11",
+          "sh31"
+        ]
+      },
+      {
+        "name": "k112",
+        "preset": "all",
+        "reads": [
+          "sv13",
+          "sh11"
+        ]
+      },
+      {
+        "name": "k113",
+        "preset": "all",
+        "reads": [
+          "sv13",
+          "sh31"
+        ]
+      },
+      {
+        "name": "k120",
+        "preset": "all",
+        "reads": [
+          "sv12",
+          "sh12"
+        ]
+      },
+      {
+        "name": "k121",
+        "preset": "all",
+        "reads": [
+          "sv12",
+          "sh32"
+        ]
+      },
+      {
+        "name": "k122",
+        "preset": "all",
+        "reads": [
+          "sv14",
+          "sh12"
+        ]
+      },
+      {
+        "name": "k123",
+        "preset": "all",
+        "reads": [
+          "sv14",
+          "sh32"
+        ]
+      },
+      {
+        "name": "k200",
+        "preset": "all",
+        "reads": [
+          "sv20",
+          "sh20"
+        ]
+      },
+      {
+        "name": "k201",
+        "preset": "all",
+        "reads": [
+          "sv20",
+          "sh40"
+        ]
+      },
+      {
+        "name": "k202",
+        "preset": "all",
+        "reads": [
+          "sv22",
+          "sh20"
+        ]
+      },
+      {
+        "name": "k203",
+        "preset": "all",
+        "reads": [
+          "sv22",
+          "sh40"
+        ]
+      },
+      {
+        "name": "k210",
+        "preset": "all",
+        "reads": [
+          "sv21",
+          "sh21"
+        ]
+      },
+      {
+        "name": "k211",
+        "preset": "all",
+        "reads": [
+          "sv21",
+          "sh41"
+        ]
+      },
+      {
+        "name": "k212",
+        "preset": "all",
+        "reads": [
+          "sv23",
+          "sh21"
+        ]
+      },
+      {
+        "name": "k213",
+        "preset": "all",
+        "reads": [
+          "sv23",
+          "sh41"
+        ]
+      },
+      {
+        "name": "k220",
+        "preset": "all",
+        "reads": [
+          "sv22",
+          "sh22"
+        ]
+      },
+      {
+        "name": "k221",
+        "preset": "all",
+        "reads": [
+          "sv22",
+          "sh42"
+        ]
+      },
+      {
+        "name": "k222",
+        "preset": "all",
+        "reads": [
+          "sv24",
+          "sh22"
+        ]
+      },
+      {
+        "name": "k223",
+        "preset": "all",
+        "reads": [
+          "sv24",
+          "sh42"
+        ]
+      }
+    ],
+    [
+      {
+        "name": "k00",
+        "preset": "any",
+        "reads": [
+          "k000",
+          "k001",
+          "k002",
+          "k003"
+        ]
+      },
+      {
+        "name": "k01",
+        "preset": "any",
+        "reads": [
+          "k010",
+          "k011",
+          "k012",
+          "k013"
+        ]
+      },
+      {
+        "name": "k02",
+        "preset": "any",
+        "reads": [
+          "k020",
+          "k021",
+          "k022",
+          "k023"
+        ]
+      },
+      {
+        "name": "k10",
+        "preset": "any",
+        "reads": [
+          "k100",
+          "k101",
+          "k102",
+          "k103"
+        ]
+      },
+      {
+        "name": "k11",
+        "preset": "any",
+        "reads": [
+          "k110",
+          "k111",
+          "k112",
+          "k113"
+        ]
+      },
+      {
+        "name": "k12",
+        "preset": "any",
+        "reads": [
+          "k120",
+          "k121",
+          "k122",
+          "k123"
+        ]
+      },
+      {
+        "name": "k20",
+        "preset": "any",
+        "reads": [
+          "k200",
+          "k201",
+          "k202",
+          "k203"
+        ]
+      },
+      {
+        "name": "k21",
+        "preset": "any",
+        "reads": [
+          "k210",
+          "k211",
+          "k212",
+          "k213"
+        ]
+      },
+      {
+        "name": "k22",
+        "preset": "any",
+        "reads": [
+          "k220",
+          "k221",
+          "k222",
+          "k223"
+        ]
+      }
+    ],
+    [
+      {
+        "name": "vertical",
+        "preset": "any",
+        "reads": [
+          "v00",
+          "v01",
+          "v02",
+          "v10",
+          "v11",
+          "v12",
+          "v20",
+          "v21",
+          "v22"
+        ]
+      },
+      {
+        "name": "horizontal",
+        "preset": "any",
+        "reads": [
+          "h00",
+          "h01",
+          "h02",
+          "h10",
+          "h11",
+          "h12",
+          "h20",
+          "h21",
+          "h22"
+        ]
+      },
+      {
+        "name": "crossing",
+        "preset": "any",
+        "reads": [
+          "x00",
+          "x01",
+          "x02",
+          "x10",
+          "x11",
+          "x12",
+          "x20",
+          "x21",
+          "x22"
+        ]
+      },
+      {
+        "name": "corner",
+        "preset": "any",
+        "reads": [
+          "k00",
+          "k01",
+          "k02",
+          "k10",
+          "k11",
+          "k12",
+          "k20",
+          "k21",
+          "k22"
+        ]
+      }
+    ],
+    [
+      {
+        "name": "no_crossing",
+        "preset": "none",
+        "reads": [
+          "crossing"
+        ]
+      },
+      {
+        "name": "no_vertical",
+        "preset": "none",
+        "reads": [
+          "vertical"
+        ]
+      },
+      {
+        "name": "no_horiz",
+        "preset": "none",
+        "reads": [
+          "horizontal"
+        ]
+      }
+    ],
+    [
+      {
+        "name": "is_plus",
+        "preset": "any",
+        "reads": [
+          "crossing"
+        ]
+      },
+      {
+        "name": "is_ell",
+        "preset": "all",
+        "reads": [
+          "corner",
+          "no_crossing"
+        ]
+      },
+      {
+        "name": "is_bar",
+        "preset": "all",
+        "reads": [
+          "vertical",
+          "no_horiz"
+        ]
+      },
+      {
+        "name": "is_dash",
+        "preset": "all",
+        "reads": [
+          "horizontal",
+          "no_vertical"
+        ]
+      }
+    ]
+  ],
+  "truthTable": false,
+  "every": 1,
+  "time": false,
+  "current": {
+    "inputs": {
+      "p0a": 0,
+      "p0b": 0,
+      "p0c": 1,
+      "p0d": 0,
+      "p0e": 0,
+      "p1a": 0,
+      "p1b": 0,
+      "p1c": 1,
+      "p1d": 0,
+      "p1e": 0,
+      "p2a": 1,
+      "p2b": 1,
+      "p2c": 1,
+      "p2d": 1,
+      "p2e": 1,
+      "p3a": 0,
+      "p3b": 0,
+      "p3c": 1,
+      "p3d": 0,
+      "p3e": 0,
+      "p4a": 0,
+      "p4b": 0,
+      "p4c": 1,
+      "p4d": 0,
+      "p4e": 0
+    },
+    "context": 0
+  }
+}

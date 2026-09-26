@@ -18,6 +18,17 @@ the server with each run, which uses it for that run and does not log or keep it
 the server's own is used where it has one, and otherwise only Simulated mode runs, which answers
 each node from its rule and cannot answer a question.
 
+## Examples
+
+`examples/` holds graphs to load with Import on the Build tab. Both classify a 5 by 5 black and
+white image as a vertical line, a horizontal line, a plus or an L, and both got 40 of 40 test
+images right:
+
+- `shape-classifier.json` asks Jev only whether each run of three pixels is dark, 30 questions in
+  one request, and works out lines, crossings, corners and the shape with rules in code.
+- `shape-classifier-gates.json` has no rules: every node is a question or gate asked of Jev, five
+  requests an image and about four times the tokens.
+
 ## Settings
 
 Settings come from the environment or a `.env` at the project root. A key set here is spent by
