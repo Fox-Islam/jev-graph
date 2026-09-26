@@ -1,0 +1,1379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JevGraph</title>
+<style>
+:root {
+  --bg: #f6f5f1; --panel: #ffffff; --ink: #1d1d1b; --muted: #6b6a64; --line: #e2e0d8;
+  --accent: #3b5bdb; --on: #2b8a3e; --off: #c92a2a; --warn: #e67700; --lo: #eef0f7; --hi: #3b5bdb;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141413; --panel: #1e1e1c; --ink: #ecebe6; --muted: #9a998f; --line: #34332f;
+    --accent: #7c95ff; --on: #69db7c; --off: #ff8787; --warn: #ffa94d; --lo: #26272e; --hi: #7c95ff;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between;
+  padding: 16px 24px; border-bottom: 1px solid var(--line); background: var(--panel); }
+h1 { font-size: 18px; margin: 0; }
+h1 small { font-weight: 400; color: var(--muted); margin-left: 8px; }
+main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 60px; display: grid; gap: 20px;
+  grid-template-columns: minmax(280px, 360px) 1fr; align-items: start; }
+@media (max-width: 800px) { main { grid-template-columns: 1fr; } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; }
+.tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 14px; }
+.tabs button { border: 1px solid var(--line); background: transparent; color: var(--ink); padding: 5px 10px;
+  border-radius: 6px; cursor: pointer; font: inherit; font-size: 13px; }
+.tabs button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+input, select, textarea { width: 100%; font: inherit; padding: 6px 8px; border: 1px solid var(--line);
+  border-radius: 6px; background: var(--bg); color: var(--ink); }
+textarea { min-height: 54px; resize: vertical; }
+.row { display: flex; gap: 8px; }
+.row > * { flex: 1; min-width: 0; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.actions button { flex: 1 1 110px; border: 0; border-radius: 6px; padding: 8px 10px; font: inherit; cursor: pointer;
+  background: var(--accent); color: #fff; }
+.actions button.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+.actions button:disabled { opacity: .5; cursor: wait; }
+.cost { display: block; font-size: 11px; opacity: .85; }
+.q { font-family: var(--mono); font-size: 13px; background: var(--bg); border: 1px solid var(--line);
+  border-radius: 6px; padding: 8px 10px; margin-top: 10px; white-space: pre-wrap; }
+.q b { font-family: system-ui, sans-serif; font-weight: 600; color: var(--muted); font-size: 12px; }
+.mode { display: flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.mode button { border: 0; background: transparent; color: var(--ink); padding: 5px 12px; font: inherit;
+  font-size: 13px; cursor: pointer; }
+.mode button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.meta { font-size: 13px; color: var(--muted); display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.key { display: flex; gap: 6px; align-items: center; }
+.key[hidden] { display: none; }
+.key select, .key input { font: inherit; font-size: 13px; padding: 4px 8px; width: auto; }
+.key input { width: 220px; }
+.hint { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
+.error { color: var(--off); font-size: 14px; margin: 0 0 10px; }
+table { border-collapse: collapse; width: 100%; font-family: var(--mono); font-size: 13px; }
+th, td { padding: 5px 8px; text-align: right; border-bottom: 1px solid var(--line); }
+th { color: var(--muted); font-weight: 500; font-family: system-ui, sans-serif; font-size: 12px; }
+tbody tr { cursor: pointer; }
+tbody tr[aria-selected="true"] { outline: 2px solid var(--accent); outline-offset: -2px; }
+td.ok { color: var(--on); } td.bad { color: var(--off); font-weight: 700; }
+.scroll { overflow-x: auto; }
+svg { display: block; width: 100%; height: auto; }
+svg text { fill: var(--ink); font: 12px system-ui, sans-serif; }
+svg .muted { fill: var(--muted); }
+svg .edge { stroke: var(--line); stroke-width: 2; fill: none; }
+svg .frame { stroke: var(--line); fill: none; }
+svg .curve { stroke: var(--accent); stroke-width: 2.5; fill: none; }
+svg .ideal { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 4 4; fill: none; }
+h2:empty, .hint:empty { display: none; }
+h2 { font-size: 14px; margin: 0 0 10px; color: var(--muted); font-weight: 500; }
+.result > * + * { margin-top: 18px; }
+.empty { color: var(--muted); text-align: center; padding: 60px 10px; }
+svg .node { cursor: pointer; }
+svg .node:hover circle, svg .node:focus circle, svg .node:hover .code, svg .node:focus .code { stroke: var(--accent); stroke-width: 2.5; }
+svg .add circle { fill: transparent; stroke: var(--muted); stroke-dasharray: 3 3; }
+svg .add:hover circle { stroke: var(--accent); }
+svg .add text { fill: var(--muted); font-size: 18px; }
+svg .add .icon { fill: none; stroke: var(--muted); stroke-width: 1.8; stroke-linecap: round; }
+svg .add:hover .icon, svg .add:focus .icon { stroke: var(--accent); }
+.signals { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 999px;
+  padding: 3px 10px; font-family: var(--mono); font-size: 13px; cursor: pointer; color: var(--ink); background: transparent; }
+.chip[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in oklab, var(--accent) 18%, transparent); }
+.chip .order { color: var(--muted); font-size: 11px; }
+.weights { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; align-items: center; font-family: var(--mono); font-size: 13px; }
+main.build { max-width: 1500px; grid-template-columns: 280px minmax(0, 1fr) 340px; }
+#editor-panel { display: none; }
+main.build #editor-panel { display: block; position: sticky; top: 16px; }
+@media (max-width: 1200px) {
+  main.build { grid-template-columns: 280px minmax(0, 1fr); }
+  main.build #editor-panel { grid-column: 2; position: static; }
+}
+@media (max-width: 800px) {
+  main.build { grid-template-columns: 1fr; }
+  main.build #editor-panel { grid-column: auto; }
+}
+.editor-head { display: flex; align-items: baseline; gap: 8px; }
+.editor-head h3 { margin: 0; font-size: 16px; font-family: var(--mono); }
+.editor-head .hint { margin: 0; }
+.editor-head button { margin-left: auto; border: 1px solid var(--off); color: var(--off); background: transparent;
+  border-radius: 6px; padding: 3px 10px; font: inherit; font-size: 13px; cursor: pointer; }
+.note { font-size: 12px; color: var(--muted); margin: 10px 0 0; }
+.note.rule::before { content: "✓ "; color: var(--on); }
+.rule-text { margin: 4px 0 0; }
+.text-row { display: flex; gap: 8px; align-items: flex-start; margin-top: 8px; }
+/* A fixed width, so the text beside it stays put when on and off swap. */
+.text-row > .chip { margin-top: 6px; flex: none; width: 48px; padding: 3px 0; justify-content: center; }
+.text-row > textarea { flex: 1; min-width: 0; height: 120px; min-height: 60px; font-size: 13px; }
+.text-row > .remove { border: 0; background: transparent; color: var(--muted); font-size: 16px; cursor: pointer; margin-top: 6px; padding: 0 2px; }
+.text-row > .remove:hover { color: var(--off); }
+.chip:disabled { opacity: .45; cursor: default; }
+td.snippet { text-align: left; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-family: system-ui, sans-serif; }
+svg .edge.lit { stroke: var(--accent); }
+svg .arrowhead { fill: var(--line); }
+svg .arrowhead.lit { fill: var(--accent); }
+svg .spin { fill: none; stroke: var(--accent); stroke-width: 3; stroke-dasharray: 36 154; stroke-linecap: round;
+  opacity: 0; transform-box: fill-box; transform-origin: center; pointer-events: none; }
+svg .firing .spin { opacity: 1; animation: spin .9s linear infinite; }
+svg .pulse { fill: none; stroke: var(--accent); stroke-width: 3; transform-box: fill-box; transform-origin: center;
+  pointer-events: none; animation: pulse .6s ease-out forwards; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { from { transform: scale(1); opacity: .9; } to { transform: scale(1.8); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  svg .firing .spin { animation: none; stroke-dasharray: none; }
+  svg .pulse { animation-duration: .01s; }
+}
+.step { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 6px; padding: 5px 28px 5px 8px; position: relative; }
+.step .step-n { color: var(--muted); font-size: 12px; min-width: 14px; }
+.step .group { display: inline-flex; align-items: center; gap: 4px; margin: 0; color: var(--ink); font-family: var(--mono); font-size: 13px; }
+.step .group input { width: 64px; padding: 2px 5px; }
+.step select { width: auto; padding: 2px 5px; font-size: 13px; }
+.step .remove { position: absolute; top: 3px; right: 4px; border: 0; background: transparent; color: var(--muted); font-size: 16px; cursor: pointer; }
+.step .remove:hover { color: var(--off); }
+th.group-col, td.group-col { font-weight: 700; }
+td.bad-cell { box-shadow: inset 0 0 0 2px var(--off); }
+.problems { color: var(--off); font-size: 13px; margin: 8px 0 0; padding-left: 18px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>JevGraph</h1>
+  <div class="meta">
+    <div class="key" id="key" hidden>
+      <select id="provider" aria-label="Who Jev is reached through"></select>
+      <input id="api-key" type="password" autocomplete="off" spellcheck="false" aria-label="Your API key" placeholder="Your API key">
+    </div>
+    <div class="mode" role="group" aria-label="Who answers">
+      <button id="mode-jev" aria-pressed="true">Jev</button>
+      <button id="mode-fake" aria-pressed="false">Simulated (free)</button>
+    </div>
+    <span id="session">0 calls this session</span>
+  </div>
+</header>
+
+<main>
+  <section class="panel">
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div id="controls"></div>
+    <div class="actions" id="actions"></div>
+  </section>
+
+  <section class="panel result" id="result">
+    <div class="empty">Pick something on the left and run it</div>
+  </section>
+
+  <section class="panel" id="editor-panel" aria-label="Node editor"></section>
+</main>
+
+<script>
+const $ = (sel, el = document) => el.querySelector(sel);
+const h = (tag, attrs = {}, ...kids) => {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k.startsWith('on')) el.addEventListener(k.slice(2), v); else el.setAttribute(k, v);
+  }
+  el.append(...kids.flat().filter(k => k != null));
+  return el;
+};
+const SVG = 'http://www.w3.org/2000/svg';
+const s = (tag, attrs = {}, text) => {
+  const el = document.createElementNS(SVG, tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  if (text != null) el.textContent = text;
+  return el;
+};
+const fmt = p => p.toFixed(3);
+
+let catalog, fake = false, session = { calls: 0, cached: 0 }, tab = 'networks';
+const form = { network: 'xor', steps: 21, b: 1 };
+// The Gates tab's one node, in the same shape as a node on the Build tab.
+const single = { name: 'out', preset: 'nand', reads: ['a', 'b'], weights: [0.6, 0.6], bias: 1 };
+
+const TABS = {
+  networks: { label: 'Build', controls: networkControls, runs: [] },
+  gates: { label: 'Gates', controls: gateControls, runs: ['truth', 'sweep'] },
+};
+const RUN_LABEL = { truth: 'Truth table', sweep: 'Sweep a' };
+
+function field(name, labelText, attrs = {}) {
+  const tag = attrs.textarea ? 'textarea' : 'input';
+  const el = h(tag, { id: name, value: tag === 'input' ? form[name] : null,
+    oninput: e => { form[name] = e.target.value; renderActions(); }, ...attrs, textarea: null });
+  if (tag === 'textarea') el.value = form[name];
+  return [h('label', { for: name }, labelText), el];
+}
+function select(name, labelText, options) {
+  const el = h('select', { id: name, onchange: e => { form[name] = e.target.value; renderControls(); } },
+    options.map(o => h('option', { value: o, selected: o === form[name] ? '' : false }, o)));
+  return [h('label', { for: name }, labelText), el];
+}
+function question(q) {
+  return h('div', { class: 'q' }, h('b', {}, 'asks  '), q.instructions,
+    q.yes ? ['\n', h('b', {}, 'yes   '), q.yes] : null, q.no ? ['\n', h('b', {}, 'no    '), q.no] : null);
+}
+
+function singleSpec() {
+  const n = single;
+  if (n.preset === 'weighted') return { weights: n.weights, bias: n.bias };
+  if (n.preset === 'custom') return { instructions: n.instructions, yes: n.yes, no: n.no, inputs: n.reads };
+  return { gate: n.preset };
+}
+const inputsOf = () => single.reads.length;
+function sweepControls() {
+  return h('div', { class: 'row' }, h('div', {}, field('steps', 'Sweep points', { type: 'number', min: 2 })),
+    h('div', {}, field('b', 'Hold b at', { type: 'number', min: 0, max: 1, step: 0.05 })));
+}
+
+// One node over a (and b), edited like a Build node: pick a gate, a weighted sum or a
+// custom question, and editing a gate's question makes it custom from the words it had.
+function gateControls() {
+  const n = single, text = textOf(n), arity = catalog.templates[n.preset]?.arity;
+  const changed = () => keepFocus(() => renderControls());
+  const q = h('textarea', { id: 'g-q', oninput: e => { singleText('instructions', e.target.value); changed(); } });
+  q.value = text.instructions;
+  return [
+    h('label', { for: 'g-preset' }, 'Asks'),
+    h('select', { id: 'g-preset', onchange: e => { setSinglePreset(e.target.value); changed(); } }, [
+      h('optgroup', { label: 'Preset' }, Object.keys(catalog.templates).map(g =>
+        h('option', { value: g, selected: n.preset === g ? '' : false }, g))),
+      h('option', { value: 'weighted', selected: n.preset === 'weighted' ? '' : false }, 'weighted sum'),
+      h('option', { value: 'custom', selected: n.preset === 'custom' ? '' : false }, 'custom question'),
+    ]),
+    arity ? null : h('div', {}, h('label', {}, 'Reads'), h('div', { class: 'signals' }, [['a'], ['a', 'b']].map(reads =>
+      h('button', { class: 'chip', 'aria-pressed': String(n.reads.length === reads.length),
+        onclick: () => { n.reads = [...reads]; n.weights = reads.map((_, i) => n.weights[i] ?? 1); changed(); } }, reads.join(', '))))),
+    n.preset === 'weighted' ? h('div', {}, h('label', {}, 'Weights'), h('div', { class: 'weights' },
+      n.reads.flatMap((r, i) => [h('span', {}, r), h('input', { id: `g-w-${r}`, type: 'number', step: 0.1, value: n.weights[i],
+        oninput: e => { n.weights[i] = Number(e.target.value); singleTextRefresh(); } })]),
+      h('span', {}, 'bias'), h('input', { id: 'g-bias', type: 'number', step: 0.1, value: n.bias,
+        oninput: e => { n.bias = Number(e.target.value); singleTextRefresh(); } }))) : null,
+    h('label', { for: 'g-q' }, 'Question'), q,
+    h('label', { for: 'g-yes' }, 'Yes means'),
+    h('input', { id: 'g-yes', value: text.yes, oninput: e => { singleText('yes', e.target.value); changed(); } }),
+    h('label', { for: 'g-no' }, 'No means'),
+    h('input', { id: 'g-no', value: text.no, oninput: e => { singleText('no', e.target.value); changed(); } }),
+    n.preset === 'custom'
+      ? h('p', { class: 'note' }, "A custom question has no rule, so the simulator can't answer it")
+      : n.preset === 'weighted' ? h('p', { class: 'note' }, 'Jev is asked to do the sum itself')
+      : h('p', { class: 'note rule' }, 'Written from the preset'),
+    sweepControls(),
+  ];
+}
+function setSinglePreset(preset) {
+  const n = single, arity = catalog.templates[preset]?.arity;
+  if (preset === 'custom') Object.assign(n, textOf(n));  // keep the question it was asking
+  n.preset = preset;
+  if (arity) n.reads = arity === 1 ? ['a'] : ['a', 'b'];
+  n.weights = n.reads.map((_, i) => n.weights[i] ?? 1);
+}
+function singleText(field, value) {
+  if (single.preset !== 'custom') { Object.assign(single, textOf(single)); single.preset = 'custom'; }
+  single[field] = value;
+}
+function singleTextRefresh() {
+  const text = textOf(single);
+  $('#g-q').value = text.instructions; $('#g-yes').value = text.yes; $('#g-no').value = text.no;
+}
+function networkControls() {
+  const issues = problems();
+  return [
+    h('div', { class: 'row' },
+      h('div', {}, select('network', 'Preset', [...Object.keys(catalog.graphs), 'blank'])),
+      h('div', { style: 'flex: 0 0 auto; align-self: end' }, h('div', { class: 'actions', style: 'margin: 0' },
+        h('button', { class: 'secondary', onclick: () => { design = { ...presetDesign(form.network), preset: form.network }; selected = null; designChanged(); } }, 'Load')))),
+    ...currentControls(),
+    h('p', { class: 'hint' }, `${plural(allNodes().length, 'node')} in ${plural(design.layers.length, 'layer')}. A truth table will run ${plural(rowCount(), 'row')}`),
+    Object.keys(issues).length ? h('ul', { class: 'problems' }, Object.entries(issues).map(([n, e]) => h('li', {}, `${n} ${e}`))) : null,
+  ];
+}
+
+function cost(experiment) {
+  return experiment === 'truth' ? 2 ** inputsOf() : Number(form.steps) || 0;
+}
+
+function renderTabs() {
+  $('#tabs').replaceChildren(...Object.entries(TABS).map(([key, t]) =>
+    h('button', { role: 'tab', 'aria-selected': String(key === tab), onclick: () => { tab = key; showTab(); } }, t.label)));
+}
+function showTab() {
+  renderTabs(); renderControls();
+  $('main').classList.toggle('build', tab === 'networks');
+  if (tab === 'networks') { renderBuilder(); renderEditor(); }
+  else $('#result').replaceChildren(h('div', { class: 'empty' }, 'Pick something on the left and run it'));
+}
+function renderControls() {
+  $('#controls').replaceChildren(...[TABS[tab].controls()].flat(2).filter(x => x != null));
+  renderActions();
+}
+function renderActions() {
+  if (tab === 'networks') return $('#actions').replaceChildren(...buildActions());
+  $('#actions').replaceChildren(...TABS[tab].runs.map((exp, i) =>
+    h('button', { class: i ? 'secondary' : null, onclick: e => run(exp, e.currentTarget) }, RUN_LABEL[exp],
+      h('span', { class: 'cost' }, fake ? 'free' : `up to ${cost(exp)} calls`))));
+}
+
+async function run(experiment, button) {
+  const body = { experiment, fake, node: singleSpec(), steps: Number(form.steps), b: Number(form.b) };
+
+  document.querySelectorAll('#actions button').forEach(b => b.disabled = true);
+  button.firstChild.textContent = 'Asking…';
+  try {
+    const res = await fetch('api/run', { method: 'POST', headers: runHeaders(), body: JSON.stringify(body) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || res.statusText);
+    if (!data.fake) { session.calls += data.calls; session.cached += data.cached; }
+    $('#session').textContent = `${session.calls} calls this session · ${session.cached} from cache`;
+    render(experiment, data);
+  } catch (e) {
+    $('#result').replaceChildren(h('p', { class: 'error' }, e.message));
+  } finally {
+    renderActions();
+  }
+}
+
+function render(experiment, data) {
+  const meta = h('p', { class: 'hint' }, data.fake ? 'Answered by the simulator: a logistic of each rule, no calls'
+    : `${data.calls} new calls to Jev, ${data.cached} answers from cache`);
+  const parts = [meta];
+
+  if (experiment === 'sweep') {
+    parts.push(h('div', {}, h('h2', {}, 'p(yes) as a runs from 0 to 1'), plot(data.rows)));
+    if (data.question) parts.push(question(data.question));
+    parts.push(h('div', { class: 'scroll' }, table(data, false)));
+  } else {
+    // Every input combination is already answered, so flipping an input only picks another row.
+    const diagram = h('div'), tbl = table(data, true, i => pick(i));
+    const pick = i => {
+      tbl.querySelectorAll('tbody tr').forEach((tr, j) => tr.setAttribute('aria-selected', String(i === j)));
+      const row = data.rows[i];
+      const flip = name => pick(data.rows.findIndex(r =>
+        data.graph.inputs.every(k => r.inputs[k] === (k === name ? 1 - row.inputs[k] : row.inputs[k]))));
+      diagram.replaceChildren(graph(data.graph, row, flip));
+    };
+    parts.push(diagram, h('div', { class: 'scroll' }, tbl));
+    if (data.question) parts.push(question(data.question));
+    pick(0);
+  }
+  $('#result').replaceChildren(...parts);
+}
+
+function table(data, clickable, onSelect) {
+  const inputs = data.graph.inputs, nodes = data.graph.nodes.map(n => n.name);
+  const hasRule = data.rows.some(r => r.want != null);
+  const head = h('tr', {}, inputs.map(k => h('th', {}, k)), nodes.map(k => h('th', {}, k === 'out' ? 'p(yes)' : k)),
+    hasRule ? [h('th', {}, 'want'), h('th', {})] : null);
+  const body = data.rows.map((r, i) => {
+    const right = r.want == null ? null : (r.p > 0.5) === r.want;
+    const tr = h('tr', { onclick: clickable ? () => onSelect(i) : null },
+      inputs.map(k => h('td', {}, String(+r.inputs[k].toFixed(4)))),
+      nodes.map(k => h('td', { style: `background: ${heat(r.signals[k])}` }, fmt(r.signals[k]))),
+      hasRule ? [h('td', {}, r.want == null ? '-' : String(+r.want)),
+        h('td', { class: right == null ? '' : right ? 'ok' : 'bad' }, right == null ? '' : right ? '✓' : '✗')] : null);
+    return tr;
+  });
+  return h('table', {}, h('thead', {}, head), h('tbody', {}, body));
+}
+
+function heat(p) {
+  return `color-mix(in oklab, var(--hi) ${Math.round(p * 55)}%, transparent)`;
+}
+
+function graph(g, row, onFlip) {
+  const depth = Object.fromEntries(g.inputs.map(k => [k, 0]));
+  for (const n of g.nodes) depth[n.name] = 1 + Math.max(...Object.values(n.wiring).map(src => depth[src]));
+  const cols = [];
+  for (const [name, d] of Object.entries(depth)) (cols[d] ||= []).push(name);
+  const W = Math.max(360, cols.length * 130), H = Math.max(...cols.map(c => c.length)) * 90 + 40;
+  const pos = {};
+  cols.forEach((names, d) => names.forEach((name, i) => {
+    pos[name] = { x: 50 + d * (W - 100) / Math.max(1, cols.length - 1), y: (i + 0.5) * H / names.length };
+  }));
+  const value = name => name in row.inputs ? row.inputs[name] : row.signals[name];
+  const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Network diagram' });
+  for (const n of g.nodes) for (const src of Object.values(n.wiring)) {
+    const a = pos[src], b = pos[n.name], mx = (a.x + b.x) / 2;
+    svg.append(s('path', { class: 'edge', d: `M${a.x},${a.y} C${mx},${a.y} ${mx},${b.y} ${b.x},${b.y}` }));
+  }
+  for (const [name, { x, y }] of Object.entries(pos)) {
+    const p = value(name), isInput = depth[name] === 0, node = g.nodes.find(n => n.name === name);
+    const fill = `color-mix(in oklab, var(--hi) ${Math.round(p * 100)}%, var(--lo))`;
+    const shape = isInput ? s('rect', { x: x - 20, y: y - 20, width: 40, height: 40, rx: 6, fill, stroke: 'var(--line)' })
+      : s('circle', { cx: x, cy: y, r: 24, fill, stroke: 'var(--line)' });
+    if (node) shape.append(s('title', {}, node.instructions));
+    const group = s('g');
+    if (isInput && onFlip) {
+      Object.assign(group.style, { cursor: 'pointer' });
+      group.setAttribute('tabindex', '0');
+      group.setAttribute('role', 'button');
+      group.setAttribute('aria-label', `${name} is ${p}; turn it ${p ? 'off' : 'on'}`);
+      group.addEventListener('click', () => onFlip(name));
+      group.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onFlip(name); } });
+      shape.setAttribute('stroke', 'var(--accent)');
+    }
+    group.append(shape);
+    if (isInput && onFlip) group.append(s('text', { x, y: y + 5, 'text-anchor': 'middle',
+      style: `font-weight: 600; fill: ${p > 0.5 ? '#fff' : 'var(--muted)'}` }, p > 0.5 ? 'on' : 'off'));
+    svg.append(group,
+      s('text', { x, y: y - 30, 'text-anchor': 'middle' }, isInput ? name : `${node.gate === name || name === 'out' ? node.gate : `${name} · ${node.gate}`}`),
+      s('text', { x, y: y + 42, 'text-anchor': 'middle', class: 'muted' }, isInput ? String(+p.toFixed(3)) : fmt(p)));
+  }
+  return svg;
+}
+
+function plot(rows) {
+  const W = 560, H = 280, L = 44, R = 16, T = 12, B = 34;
+  const X = a => L + a * (W - L - R), Y = p => T + (1 - p) * (H - T - B);
+  const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Transfer curve' });
+  svg.append(s('rect', { class: 'frame', x: L, y: T, width: W - L - R, height: H - T - B }));
+  for (const t of [0, 0.25, 0.5, 0.75, 1]) {
+    svg.append(s('text', { x: X(t), y: H - 12, 'text-anchor': 'middle', class: 'muted' }, t),
+      s('text', { x: L - 8, y: Y(t) + 4, 'text-anchor': 'end', class: 'muted' }, t));
+  }
+  svg.append(s('text', { x: (L + W - R) / 2, y: H, 'text-anchor': 'middle', class: 'muted' }, 'a'));
+  if (rows.some(r => r.want != null)) {
+    // A step: flat at each point's right answer, switching halfway to the next.
+    const ruled = rows.filter(r => r.want != null);
+    svg.append(s('path', { class: 'ideal', d: ruled.map((r, i) => i === 0
+      ? `M${X(r.inputs.a)},${Y(+r.want)}`
+      : `H${X((ruled[i - 1].inputs.a + r.inputs.a) / 2)} V${Y(+r.want)} H${X(r.inputs.a)}`).join(' ') }));
+  }
+  svg.append(s('path', { class: 'curve', d: rows.map((r, i) => `${i ? 'L' : 'M'}${X(r.inputs.a)},${Y(r.p)}`).join(' ') }));
+  for (const r of rows) {
+    const dot = s('circle', { cx: X(r.inputs.a), cy: Y(r.p), r: 3.5, fill: 'var(--accent)' });
+    dot.append(s('title', {}, `a = ${r.inputs.a}: p = ${fmt(r.p)}`));
+    svg.append(dot);
+  }
+  return svg;
+}
+
+
+// `design` is what the page edits and sends. A node is a question or a rule: a preset
+// (a gate or a weighted sum) writes its question from the names of the signals the
+// node reads, `custom` is whatever you type, and a rule is worked out by the server.
+// A node can read any signal - one in a later layer, or itself - so a design can
+// loop; the layers are only where it is drawn. `built` is the last run, filled in as
+// its events arrive, and dropped when the design changes, since it describes the old one.
+const INPUT_NAMES = 'abcdefghijklmnopqrstuvwxyz';
+const NODE_NAME = /^[a-z][a-z0-9_]{0,11}$/;
+const TEXT = 'context';
+// The tick number times the tick interval; in a truth table 0.
+const TIME = 'time';
+let design, built = null, builtRow = 0, selected = null, running = null;
+
+function presetDesign(name) {
+  return migrate(name === 'blank' ? { inputs: ['a', 'b'], layers: [] } : structuredClone(catalog.graphs[name]));
+}
+// Designs saved before every node was a preset keep working.
+function migrate(d) {
+  for (const layer of d.layers) layer.forEach((n, i) => {
+    if (n.preset) return;
+    const reads = n.kind === 'gate' ? Object.values(n.wiring) : n.reads;
+    layer[i] = n.kind === 'gate' ? { name: n.name, preset: n.gate, reads }
+      : n.kind === 'weighted' ? { name: n.name, preset: 'weighted', reads, weights: n.weights, bias: n.bias }
+      : { name: n.name, preset: 'custom', reads, instructions: n.instructions, yes: n.yes, no: n.no };
+  });
+  // Designs saved when the context was called text keep working.
+  d.contexts ??= d.texts ?? [];
+  delete d.texts;
+  for (const n of d.layers.flat()) n.reads = n.reads.map(r => r === 'text' ? TEXT : r);
+  // The inputs the next tick runs with. A preset's example steps start it off.
+  d.current ??= { inputs: { ...(d.steps?.[0]?.inputs || {}) }, context: 0 };
+  d.current.context ??= d.current.text ?? 0;
+  delete d.current.text;
+  delete d.steps;
+  d.time ??= false;
+  delete d.mirror;  // a layout setting an earlier version saved
+  d.every ??= 1;
+  return d;
+}
+function loadDesign() {
+  try {
+    const d = JSON.parse(localStorage.getItem('jev-perceptron-design'));
+    if (Array.isArray(d?.inputs) && Array.isArray(d?.layers)) return migrate(d);
+  } catch {}
+  return presetDesign('xor');
+}
+function designChanged({ editor = true, controls = true } = {}) {
+  running?.controller.abort();
+  design.layers = design.layers.filter(layer => layer.length);
+  if (selected && !findNode(selected) && !inputSignals().includes(selected)) selected = null;
+  built = null;
+  try { localStorage.setItem('jev-perceptron-design', JSON.stringify(design)); } catch {}
+  keepFocus(() => {
+    if (controls) renderControls(); else renderActions();
+    renderBuilder();
+    if (editor) renderEditor();
+  });
+}
+
+// Rebuilding a panel replaces the field you are typing in; put the focus and caret back.
+function keepFocus(render) {
+  const id = document.activeElement?.id;
+  let caret = null;
+  try { caret = id && [document.activeElement.selectionStart, document.activeElement.selectionEnd]; } catch {}
+  render();
+  const el = id && document.getElementById(id);
+  if (el && el !== document.activeElement) {
+    el.focus();
+    try { if (caret) el.setSelectionRange(...caret); } catch {}
+  }
+}
+
+// The context input exists once there is a context to read; each is run as its own row. The
+// page writes contexts as text; one given as a JSON object is sent as it is.
+const texts = () => design.contexts.filter(t => typeof t !== 'string' || t.trim());
+const inputSignals = () => [...design.inputs, ...(design.contexts.length ? [TEXT] : []), ...(design.time ? [TIME] : [])];
+const rowCount = () => Math.max(1, texts().length) * 2 ** design.inputs.length;
+const allNodes = () => design.layers.flat();
+const signalNames = () => [...inputSignals(), ...allNodes().map(n => n.name)];
+function findNode(name) {
+  for (const [L, layer] of design.layers.entries()) {
+    const i = layer.findIndex(n => n.name === name);
+    if (i >= 0) return { L, i, node: layer[i] };
+  }
+  return null;
+}
+
+// The nodes that can reach themselves: these are asked every tick, and need a starting value.
+function loopNodes() {
+  const readers = {};
+  for (const n of allNodes()) for (const r of n.reads) (readers[r] ||= []).push(n.name);
+  const inLoop = new Set();
+  for (const n of allNodes()) {
+    const seen = new Set(), stack = [...(readers[n.name] || [])];
+    while (stack.length) {
+      const m = stack.pop();
+      if (m === n.name) { inLoop.add(n.name); break; }
+      if (!seen.has(m)) { seen.add(m); stack.push(...(readers[m] || [])); }
+    }
+  }
+  return inLoop;
+}
+
+// Signals named like a0, a1, a2 are the bits of a number, least significant first.
+function groupsOf(names) {
+  const by = {};
+  for (const n of names) {
+    const m = /^([a-z](?:[a-z0-9_]*[a-z_])?)(\d+)$/.exec(n);
+    if (m) (by[m[1]] ||= {})[Number(m[2])] = n;
+  }
+  return Object.entries(by).map(([prefix, idx]) => {
+    const bits = [];
+    for (let i = 0; idx[i]; i++) bits.push(idx[i]);
+    return { prefix, bits, whole: bits.length === Object.keys(idx).length };
+  }).filter(g => g.bits.length >= 2 && g.whole);
+}
+function decode(group, values) {
+  if (group.bits.some(b => values?.[b] == null)) return null;
+  return group.bits.reduce((sum, b, i) => sum + ((values[b] > 0.5 ? 1 : 0) << i), 0);
+}
+
+// The same templates the server writes gate questions from.
+function renderTemplate(template, reads) {
+  const list = reads.length === 1 ? reads[0] : `${reads.slice(0, -1).join(', ')} and ${reads.at(-1)}`;
+  return template.replaceAll('{x}', reads[0]).replaceAll('{list}', list).replaceAll('{both}', reads.length === 2 ? 'both' : 'all');
+}
+const num = w => String(Number(w));
+// Rules are worked out in code by the server: no call, and exact. The page has them from the
+// catalog, and a server without them has none to offer.
+const rules = () => catalog?.rules ?? {};
+const isRule = preset => preset in rules();
+function textOf(n) {
+  if (n.preset === 'custom') return { instructions: n.instructions, yes: n.yes, no: n.no };
+  if (!n.reads.length) return { instructions: '', yes: '', no: '' };
+  if (isRule(n.preset)) {
+    const describe = renderTemplate(rules()[n.preset].describe, n.reads)
+      .replaceAll('{n}', String(n.n ?? 1)).replaceAll('{weights}', (n.weights ?? []).map(num).join(', '));
+    return { instructions: describe, yes: '', no: '' };
+  }
+  if (n.preset === 'weighted') {
+    const total = n.reads.map((r, i) => `${num(n.weights[i])} × ${r}`).join(' + '), b = num(n.bias);
+    return { instructions: `Is ${total} greater than ${b}?`, yes: `${total} is greater than ${b}.`, no: `${total} is ${b} or less.` };
+  }
+  const t = catalog.templates[n.preset];
+  return { instructions: renderTemplate(t.instructions, n.reads), yes: renderTemplate(t.yes, n.reads), no: renderTemplate(t.no, n.reads) };
+}
+function nodeLabel(n) {
+  if (isRule(n.preset)) return rules()[n.preset].glyph.replaceAll('{n}', String(n.n ?? 1));
+  return { weighted: 'Σ', custom: '?', majority: 'maj' }[n.preset] ?? n.preset;
+}
+const asksJev = n => !isRule(n.preset);
+
+function nodeProblem(n, seen, known) {
+  const bad = n.reads.filter(r => !known.includes(r)), t = catalog.templates[n.preset];
+  if (seen.has(n.name)) return 'shares its name with another signal';
+  if (bad.includes(TEXT)) return 'reads the context, but there are no contexts yet';
+  if (n.preset !== 'custom' && n.reads.includes(TEXT)) return `is ${isRule(n.preset) ? rules()[n.preset].label : `a ${n.preset === 'weighted' ? 'weighted sum' : n.preset}`}, which works on numbers`;
+  if (bad.length) return `reads ${bad.join(', ')}, which is not an input or a node`;
+  if (!n.reads.length) return 'reads nothing';
+  if (t?.arity === 1 && n.reads.length !== 1) return `is ${n.preset}, which reads exactly one signal`;
+  if (t?.arity === 2 && n.reads.length < 2) return `is ${n.preset}, which reads two or more signals`;
+  if (n.preset === 'custom' && !n.instructions.trim()) return 'has no question';
+  if (n.preset === 'atLeast' && !(n.n >= 1 && n.n <= n.reads.length)) return `needs at least 1, and no more than the ${n.reads.length} signals it reads`;
+  if (n.preset === 'average' && (n.weights.some(w => w < 0) || !(n.weights.reduce((a, b) => a + b, 0) > 0))) return 'needs weights of 0 or more, not all 0';
+  return null;
+}
+function problems() {
+  const out = {}, seen = new Set([...design.inputs, TEXT, TIME]), known = signalNames();
+  for (const n of allNodes()) {
+    const p = nodeProblem(n, seen, known);
+    if (p) out[n.name] = p;
+    seen.add(n.name);
+  }
+  if (!design.layers.length) out['The network'] = 'has no nodes yet';
+  if (!inputSignals().length) out['The network'] = 'needs an input: add one with the buttons under the inputs';
+  if (design.contexts.length && !texts().length) out['The context input'] = 'has no contexts yet';
+  return out;
+}
+
+function freshName() {
+  const taken = new Set([...design.inputs, TEXT, TIME, ...allNodes().map(n => n.name)]);
+  for (let i = 1; ; i++) if (!taken.has(`n${i}`)) return `n${i}`;
+}
+function addNode(L) {
+  const prev = L ? design.layers[L - 1].map(n => n.name) : design.inputs;
+  const reads = prev.slice(0, 2);
+  // In the first layer of a network with a context, the new node is a question about it.
+  const node = L === 0 && design.contexts.length
+    ? { name: freshName(), preset: 'custom', reads: [TEXT], instructions: '', yes: '', no: '' }
+    : { name: freshName(), preset: reads.length >= 2 ? 'and' : 'buffer', reads: reads.length ? reads : inputSignals().slice(0, 1) };
+  if (L === design.layers.length) design.layers.push([]);
+  design.layers[L].push(node);
+  selected = node.name;
+  designChanged();
+  if (node.preset === 'custom') $('#ed-q')?.focus();
+}
+function selectSignal(name) {
+  selected = name;
+  renderBuilder();
+  renderEditor();
+}
+
+// The inputs for the next tick, kept apart from the design: changing them leaves the
+// ticks run so far in place, since the next tick runs from where the last one ended.
+
+function inputsChanged() {
+  try { localStorage.setItem('jev-perceptron-design', JSON.stringify(design)); } catch {}
+  keepFocus(() => {
+    renderControls();
+    redrawGraph();
+  });
+}
+
+function currentControls() {
+  const groups = groupsOf(design.inputs), grouped = new Set(groups.flatMap(g => g.bits));
+  const loose = design.inputs.filter(k => !grouped.has(k)), now = design.current;
+  if (!design.inputs.length) return [];
+  return [
+    h('label', {}, 'States for the next tick'),
+    h('div', { class: 'step' },
+      groups.map(g => h('label', { class: 'group' }, g.prefix,
+        h('input', { id: `now-${g.prefix}`, type: 'number', min: 0, max: 2 ** g.bits.length - 1,
+          value: decode(g, now.inputs) ?? 0, oninput: e => {
+            const v = Math.max(0, Math.min(2 ** g.bits.length - 1, Math.floor(Number(e.target.value) || 0)));
+            g.bits.forEach((b, j) => { now.inputs[b] = v >> j & 1; });
+            try { localStorage.setItem('jev-perceptron-design', JSON.stringify(design)); } catch {}
+            redrawGraph();
+          } }))),
+      loose.map(k => h('button', { class: 'chip', 'aria-pressed': String(!!now.inputs[k]), onclick: () => flipInput(k) }, k))),
+  ];
+}
+
+function flipInput(name) {
+  design.current.inputs[name] = design.current.inputs[name] ? 0 : 1;
+  inputsChanged();
+}
+
+
+function buildActions() {
+  const blocked = Object.keys(problems()).length > 0, nodes = allNodes().filter(asksJev).length, loops = loopNodes().size > 0;
+  const estimate = (rows, label) => fake || !nodes ? 'free' : `${loops ? 'at least' : 'about'} ${(rows * nodes).toLocaleString()} calls`;
+  const start = { table: () => runBuild('table'), tick: () => runTicks(false), live: () => runTicks(true) };
+  const button = (mode, label, primary, note) => {
+    const active = running?.mode === mode, off = mode === 'table' && design.truthTable === false;
+    const progress = mode === 'table' ? `${built?.rows.filter(Boolean).length} of ${built?.rows.length} done` : `${built?.rows.length ?? 0} ticks`;
+    return h('button', { class: primary ? null : 'secondary', disabled: (blocked && !active) || (running && !active) || off ? '' : false,
+      onclick: () => active ? running.controller.abort() : start[mode]() },
+      active ? 'Stop' : label, h('span', { class: 'cost' }, active ? progress : note));
+  };
+  const ticks = built?.mode === 'ticks' ? built.rows.length : 0;
+  return [
+    button('table', 'Truth table', true, design.truthTable === false ? 'off for this network' : estimate(rowCount())),
+    button('tick', 'Run one tick', false, fake || !nodes ? 'free' : `up to ${nodes} calls`),
+    button('live', 'Run live', false, fake || !nodes ? 'free' : `up to ${nodes} calls a tick`),
+    ticks && !running ? h('button', { class: 'secondary', onclick: () => { built = null; renderBuilder(); renderActions(); } },
+      'Reset', h('span', { class: 'cost' }, 'back to the initial states')) : null,
+  ].filter(Boolean);
+}
+
+async function runBuild(mode) {
+  const controller = new AbortController();
+  const total = rowCount();
+  built = { mode, rows: new Array(total).fill(null), calls: 0, cached: 0, fake, done: false };
+  builtRow = 0;
+  running = { mode, controller, inflight: {}, live: {} };
+  renderBuilder();
+  renderActions();
+
+  try {
+    await stream({ experiment: 'build', mode, fake, graph: { ...design, contexts: texts() } },
+      controller.signal, onRunEvent);
+  } catch (e) {
+    if (e.name === 'AbortError') built.stopped = true; else built.error = e.message;
+  } finally {
+    if (running?.controller === controller) running = null;
+    if (built) built.done = true;
+    renderBuilder();
+    renderActions();
+  }
+}
+
+// POST a run and hand each line of its answer, one JSON event, to `onEvent`.
+async function stream(body, signal, onEvent) {
+  const res = await fetch('api/run', { method: 'POST', headers: runHeaders(), signal, body: JSON.stringify(body) });
+  if (!res.ok) throw new Error((await res.json()).error || res.statusText);
+  const reader = res.body.getReader(), decoder = new TextDecoder();
+  let buffer = '';
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    let end;
+    while ((end = buffer.indexOf('\n')) >= 0) {
+      const line = buffer.slice(0, end);
+      buffer = buffer.slice(end + 1);
+      if (line.trim()) onEvent(JSON.parse(line));
+    }
+  }
+}
+
+const plural = (n, word) => `${n.toLocaleString()} ${word}${n === 1 ? '' : 's'}`;
+
+const pause = (ms, signal) => new Promise(done => {
+  const timer = setTimeout(done, ms);
+  signal.addEventListener('abort', () => { clearTimeout(timer); done(); }, { once: true });
+});
+
+// Ticks: each settles from where the last one ended, with the inputs set for the
+// next tick. Run one tick asks for one; Run live asks for one every interval until
+// stopped. Both add to the same history, so they cannot disagree, and the page
+// holds the state and sends it back: the server keeps nothing between ticks.
+async function runTicks(live) {
+  const controller = new AbortController();
+  if (built?.mode !== 'ticks') built = { mode: 'ticks', rows: [], calls: 0, cached: 0, fake, done: false };
+  built.done = false;
+  built.error = null;
+  running = { mode: live ? 'live' : 'tick', controller, inflight: {}, live: {} };
+  renderActions();
+
+  try {
+    do {
+      const tickStart = performance.now();
+      await tick(controller);
+      if (!live || built.error) break;
+      await pause(design.every * 1000 - (performance.now() - tickStart), controller.signal);
+    } while (!controller.signal.aborted);
+  } catch (e) {
+    if (e.name !== 'AbortError') built.error = e.message;
+  } finally {
+    if (running?.controller === controller) running = null;
+    if (built) { built.done = true; builtRow = Math.max(0, built.rows.length - 1); }
+    renderBuilder();
+    renderActions();
+  }
+}
+
+async function tick(controller) {
+  const previous = built.rows.at(-1), index = built.rows.length;
+  // The tick's scheduled time, not the clock's: a late tick is sent 10, not 10.1,
+  // which is what a question like "is time a multiple of 10?" needs.
+  running.time = Math.round(index * design.every * 10) / 10;
+  running.live = { ...(previous?.signals || {}) };
+  builtRow = index;
+  renderBuilder();
+  await stream({
+    experiment: 'build', mode: 'tick', fake, graph: { ...design, contexts: texts() },
+    inputs: design.current.inputs, time: running.time, context: design.current.context ?? 0,
+    previous: previous ? { ...previous.inputs, ...previous.signals } : null,
+    previousIdeal: previous ? { ...previous.inputs, ...previous.ideal } : null,
+  }, controller.signal, e => onRunEvent({ ...e, row: index }));
+}
+
+function onRunEvent(e) {
+  if (!running || !built) return;
+  if (e.event === 'firing') {
+    running.inflight[e.node] = (running.inflight[e.node] || 0) + 1;
+    setFiring(e.node, true);
+  } else if (e.event === 'fired') {
+    running.inflight[e.node] = Math.max(0, (running.inflight[e.node] || 1) - 1);
+    if (!running.inflight[e.node]) setFiring(e.node, false);
+    pulse(e.node);
+    if (built.mode !== 'table' && e.row === builtRow) { running.live[e.node] = e.p; setNodeValue(e.node, e.p); }
+  } else if (e.event === 'row') {
+    built.rows[e.row] = e;
+    if (e.row === builtRow) refreshValues();
+    scheduleTable();
+    renderActions();
+  } else if (e.event === 'done') {
+    built.calls += e.calls;
+    built.cached += e.cached;
+    if (!e.fake) { session.calls += e.calls; session.cached += e.cached; }
+    $('#session').textContent = `${session.calls} calls this session · ${session.cached} from cache`;
+  } else if (e.event === 'error') {
+    built.error = e.error;
+  }
+}
+
+// What the diagram shows: the live step while one is settling, else the selected row.
+function shownRow() {
+  const row = built?.rows[builtRow];
+  if (built?.mode === 'ticks' && running && !row) {
+    return { inputs: { ...design.current.inputs, [TIME]: running.time, [TEXT]: texts()[design.current.context ?? 0] }, signals: running.live, ideal: {} };
+  }
+  return row;
+}
+
+let nodeEls = {}, tableHost = null, tableQueued = false;
+
+function setFiring(name, on) {
+  nodeEls[name]?.g.classList.toggle('firing', on);
+}
+function pulse(name) {
+  const el = nodeEls[name];
+  if (!el) return;
+  const ring = s('circle', { class: 'pulse', cx: el.x, cy: el.y, r: 26 });
+  el.g.append(ring);
+  const drop = () => ring.remove();
+  ring.addEventListener('animationend', drop);
+  setTimeout(drop, 900);
+}
+const fillFor = p => typeof p !== 'number' ? 'var(--lo)' : `color-mix(in oklab, var(--hi) ${Math.round(p * 100)}%, var(--lo))`;
+function setNodeValue(name, p) {
+  const el = nodeEls[name];
+  if (!el || !el.value) return;
+  el.shape.setAttribute('fill', fillFor(p));
+  el.value.textContent = typeof p === 'number' ? fmt(p) : '';
+  el.label.style.fill = p > 0.5 ? '#fff' : 'var(--ink)';
+}
+// The diagram alone, for a new step mid-run; the table and the rest are left alone.
+function redrawGraph() {
+  $('#graph')?.replaceWith(builderGraph());
+  const title = $('#graph-title');
+  if (title) title.textContent = graphTitle();
+}
+function graphTitle() {
+  if (built?.mode !== 'ticks') return '';
+  const at = running ? running.time : built.rows[builtRow]?.inputs[TIME];
+  return `Tick ${builtRow + 1}${design.time && at != null ? ` · ${at}s` : ''}`;
+}
+function refreshValues() {
+  const row = shownRow();
+  if (!row) return;
+  for (const n of allNodes()) setNodeValue(n.name, row.signals[n.name]);
+}
+function scheduleTable() {
+  if (tableQueued) return;
+  tableQueued = true;
+  requestAnimationFrame(() => {
+    tableQueued = false;
+    if (tableHost && built) tableHost.replaceChildren(builderTable());
+    const meta = $('#run-meta');
+    if (meta) meta.replaceWith(runMeta());
+  });
+}
+
+function runMeta() {
+  const arrived = built.rows.filter(Boolean);
+  const bits = [];
+  if (built.mode === 'ticks') bits.push(`${plural(arrived.length, 'tick')}, ${built.calls} calls to Jev, ${built.cached} from cache${built.done ? '' : '…'}`);
+  else if (!built.done) bits.push(`${arrived.length} of ${built.rows.length} rows done…`);
+  else if (!built.stopped && !built.fake) bits.push(`${built.calls} new calls to Jev, ${built.cached} answers from cache`);
+  if (built.stopped && built.mode === 'table') bits.push(`Stopped after ${arrived.length} of ${built.rows.length}`);
+  return h('p', { class: 'hint', id: 'run-meta' }, bits.join(' '));
+}
+
+function renderBuilder() {
+  if (tab !== 'networks') return;
+  const parts = [];
+  if (built?.error) parts.push(h('p', { class: 'error' }, built.error));
+  if (built) parts.push(runMeta());
+  parts.push(h('h2', { id: 'graph-title' }, graphTitle()), builderGraph());
+  tableHost = built ? h('div', { class: 'scroll' }, builderTable()) : null;
+  if (tableHost) parts.push(tableHost);
+  $('#result').replaceChildren(...parts);
+}
+
+function builderGraph() {
+  const row = shownRow(), issues = problems(), looped = loopNodes();
+  const unsettled = new Set(row?.unsettled || []);
+  const cols = [inputSignals(), ...design.layers.map(l => l.map(n => n.name))];
+  const tallest = Math.max(...cols.map(c => c.length), 1) + 1;
+  const COL = 140, ROW = tallest > 8 ? 62 : 92, W = 90 + cols.length * COL, H = tallest * ROW + 30;
+  const X = c => 50 + c * COL;
+  const pos = {}, colOf = {};
+  cols.forEach((names, c) => names.forEach((name, i) => {
+    pos[name] = { x: X(c), y: (i + 0.5) * (H - ROW - 20) / names.length + 30 };
+    colOf[name] = c;
+  }));
+  const svg = s('svg', { id: 'graph', viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Network builder', style: `max-width: ${W * 1.1}px` });
+  svg.append(s('defs', {}, ...[]));
+  const defs = svg.firstChild;
+  const marker = s('marker', { id: 'arrow', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' });
+  marker.append(s('path', { d: 'M0,1 L9,5 L0,9 z', class: 'arrowhead' }));
+  const markerLit = marker.cloneNode(true);
+  markerLit.setAttribute('id', 'arrow-lit');
+  markerLit.firstChild.setAttribute('class', 'arrowhead lit');
+  defs.append(marker, markerLit);
+  nodeEls = {};
+
+  for (const n of allNodes()) for (const src of n.reads) {
+    const a = pos[src], b = pos[n.name];
+    if (!a) continue;
+    const lit = n.name === selected || src === selected, R = 26;
+    let d;
+    if (src === n.name) d = `M${a.x + 14},${a.y - 22} C${a.x + 50},${a.y - 70} ${a.x - 50},${a.y - 70} ${a.x - 14},${a.y - 22}`;
+    else if (colOf[n.name] > colOf[src]) {
+      const mx = (a.x + b.x) / 2;
+      d = `M${a.x + 22},${a.y} C${mx},${a.y} ${mx},${b.y} ${b.x - R},${b.y}`;
+    } else if (colOf[n.name] < colOf[src] && !findNode(src)?.node.reads.includes(n.name)) {
+      // To an earlier layer: out of the left, into the right. Where the two read each
+      // other, this would sit on the wire going the other way, so it loops round below.
+      const mx = (a.x + b.x) / 2;
+      d = `M${a.x - 22},${a.y} C${mx},${a.y} ${mx},${b.y} ${b.x + R},${b.y}`;
+    } else {
+      // Within one layer, or back to a node that reads this one: out of the right,
+      // round, and into the left.
+      const out = Math.max(a.x, b.x) + 70, back = Math.min(a.x, b.x) - 70, bend = Math.max(a.y, b.y) + 40;
+      d = `M${a.x + 22},${a.y} C${out},${a.y} ${out},${bend} ${(a.x + b.x) / 2},${bend} S${back},${b.y} ${b.x - R},${b.y}`;
+    }
+    svg.append(s('path', { class: `edge${lit ? ' lit' : ''}`, d, 'marker-end': `url(#${lit ? 'arrow-lit' : 'arrow'})` }));
+  }
+
+  const button = (g, label, onActivate) => {
+    g.setAttribute('tabindex', '0');
+    g.setAttribute('role', 'button');
+    g.setAttribute('aria-label', label);
+    g.addEventListener('click', onActivate);
+    g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onActivate(); } });
+    return g;
+  };
+  const canFlip = built?.mode === 'table' && built.done && row;
+
+  design.inputs.forEach(name => {
+    const { x, y } = pos[name], isSelected = name === selected;
+    const p = built?.mode === 'table' ? row?.inputs[name] : design.current.inputs[name] ?? 0;
+    const g = button(s('g', { class: 'node' }), `${name} is ${p ? 'on' : 'off'}; flip it`, () => {
+      if (!canFlip) {
+        design.current.inputs[name] = design.current.inputs[name] ? 0 : 1;
+        selected = name;
+        try { localStorage.setItem('jev-perceptron-design', JSON.stringify(design)); } catch {}
+        keepFocus(() => { renderControls(); renderBuilder(); renderEditor(); });
+        return;
+      }
+      {
+        builtRow = built.rows.findIndex(r => r && r.inputs[TEXT] === row.inputs[TEXT] &&
+          design.inputs.every(k => r.inputs[k] === (k === name ? 1 - row.inputs[k] : row.inputs[k])));
+      }
+      selectSignal(name);
+    });
+    g.append(s('rect', { x: x - 20, y: y - 20, width: 40, height: 40, rx: 6, fill: fillFor(p),
+      stroke: isSelected || canFlip ? 'var(--accent)' : 'var(--line)', 'stroke-width': isSelected ? 3 : 1 }),
+      s('text', { x, y: y - 28, 'text-anchor': 'middle', style: isSelected ? 'fill: var(--accent); font-weight: 600' : null }, name));
+    if (p != null) g.append(s('text', { x, y: y + 5, 'text-anchor': 'middle',
+      style: `font-weight: 600; fill: ${p > 0.5 ? '#fff' : 'var(--muted)'}` }, p > 0.5 ? 'on' : 'off'));
+    svg.append(g);
+  });
+
+  if (design.time) {
+    const { x, y } = pos[TIME], t = row?.inputs[TIME];
+    const g = button(s('g', { class: 'node' }), 'The time input', () => selectSignal(TIME));
+    g.append(s('rect', { x: x - 26, y: y - 20, width: 52, height: 40, rx: 20, fill: 'var(--lo)', stroke: running?.mode === 'live' ? 'var(--accent)' : 'var(--line)' }),
+      s('text', { x, y: y - 28, 'text-anchor': 'middle' }, TIME),
+      s('text', { x, y: y + 5, 'text-anchor': 'middle', style: 'font-weight: 600' }, t != null ? `${t}s` : '⏱'));
+    svg.append(g);
+  }
+
+  if (design.contexts.length) {
+    const { x, y } = pos[TEXT], list = texts();
+    const at = built?.mode === 'table' ? (row ? list.indexOf(row.inputs[TEXT]) : -1) : list.length ? (design.current.context ?? 0) % list.length : -1;
+    // Opens the contexts in the editor, like any input; which one a tick uses is picked there.
+    const g = button(s('g', { class: 'node' }), 'Edit the contexts', () => selectSignal(TEXT));
+    g.append(s('rect', { x: x - 26, y: y - 22, width: 52, height: 44, rx: 3, fill: 'var(--lo)',
+      stroke: selected === TEXT ? 'var(--accent)' : 'var(--line)', 'stroke-width': selected === TEXT ? 3 : 1 }),
+      s('text', { x, y: y - 30, 'text-anchor': 'middle' }, TEXT),
+      s('text', { x, y: y + 5, 'text-anchor': 'middle', style: 'font-weight: 600' }, at >= 0 ? `#${at + 1}` : `×${list.length}`),
+      s('title', {}, at >= 0 ? list[at] : `${list.length} contexts, one per row`));
+    svg.append(g);
+  }
+
+  for (const n of allNodes()) {
+    const { x, y } = pos[n.name], p = row?.signals[n.name], want = row?.ideal?.[n.name];
+    const wrong = typeof p === 'number' && want != null && (p > 0.5) !== (want > 0.5), isSelected = n.name === selected;
+    const stuck = unsettled.has(n.name), bad = issues[n.name] || wrong || stuck;
+    // A node worked out in code is drawn square, so what costs a call is what is round.
+    const look = { fill: fillFor(p),
+      stroke: stuck ? 'var(--warn)' : bad ? 'var(--off)' : isSelected ? 'var(--accent)' : 'var(--line)',
+      'stroke-width': bad || isSelected ? 3 : 1, 'stroke-dasharray': issues[n.name] || stuck ? '4 3' : 'none' };
+    const circle = asksJev(n) ? s('circle', { cx: x, cy: y, r: 24, ...look })
+      : s('rect', { class: 'code', x: x - 22, y: y - 22, width: 44, height: 44, rx: 10, ...look });
+    circle.append(s('title', {}, issues[n.name] ? `${n.name} ${issues[n.name]}` : stuck ? `${n.name} is in a loop still moving` : textOf(n).instructions));
+    const g = button(s('g', { class: 'node' }), `Edit ${n.name}`, () => selectSignal(n.name));
+    const label = s('text', { x, y: y + 5, 'text-anchor': 'middle', style: `font-weight: 600; fill: ${p > 0.5 ? '#fff' : 'var(--ink)'}` }, nodeLabel(n));
+    const value = s('text', { x, y: y + 42, 'text-anchor': 'middle', class: 'muted' }, typeof p === 'number' ? fmt(p) + (wrong ? ' ✗' : '') : '');
+    g.append(s('circle', { class: 'spin', cx: x, cy: y, r: 30 }), circle, label,
+      s('text', { x, y: y - 30, 'text-anchor': 'middle', style: isSelected ? 'fill: var(--accent); font-weight: 600' : null },
+        looped.has(n.name) ? `${n.name} ↻` : n.name), value);
+    if (running?.inflight[n.name]) g.classList.add('firing');
+    nodeEls[n.name] = { g, shape: circle, label, value, x, y };
+    svg.append(g);
+  }
+
+  const plus = (x, y, label, onActivate, icon = 'plus') => {
+    const g = button(s('g', { class: 'add' }), label, onActivate);
+    g.append(s('circle', { cx: x, cy: y, r: 14 }), ...ICONS[icon](x, y));
+    g.append(s('title', {}, label));
+    svg.append(g);
+  };
+  // Under the inputs: an on/off input, and time and a context until the network has them.
+  const adds = [['plus', 'Add an on/off input', addInput],
+    ...(design.time ? [] : [['clock', 'Add the time input', () => { design.time = true; selected = TIME; designChanged(); }]]),
+    ...(design.contexts.length ? [] : [['text', 'Add the context input', () => { design.contexts.push(''); selected = TEXT; designChanged(); $('#text-0')?.focus(); }]])];
+  adds.forEach(([icon, label, act], i) => plus(X(0) + (i - (adds.length - 1) / 2) * 34, H - ROW / 2, label, act, icon));
+  design.layers.forEach((layer, L) => plus(X(L + 1), H - ROW / 2, `Add a node to layer ${L + 1}`, () => addNode(L)));
+  plus(X(cols.length), H / 2 - ROW / 4, 'Add a layer', () => addNode(design.layers.length));
+  return svg;
+}
+
+// The glyphs on the add buttons, drawn so they match in either theme.
+const ICONS = {
+  plus: (x, y) => [s('path', { class: 'icon', d: `M${x - 6},${y} H${x + 6} M${x},${y - 6} V${y + 6}` })],
+  clock: (x, y) => [s('circle', { class: 'icon', cx: x, cy: y, r: 7 }), s('path', { class: 'icon', d: `M${x},${y - 4} V${y} L${x + 3},${y + 2}` })],
+  text: (x, y) => [s('path', { class: 'icon', d: `M${x - 6},${y - 4} H${x + 6} M${x - 6},${y} H${x + 6} M${x - 6},${y + 4} H${x + 2}` })],
+};
+
+function addInput() {
+  const taken = new Set(signalNames());
+  const name = [...INPUT_NAMES].find(l => !taken.has(l)) ?? freshName();
+  design.inputs.push(name);
+  design.current.inputs[name] ??= 0;
+  selected = name;
+  designChanged();
+}
+
+function builderTable() {
+  const nodes = allNodes().map(n => n.name), ticks = built.mode === 'ticks', timed = design.time;
+  const inGroups = groupsOf(design.inputs), inGrouped = new Set(inGroups.flatMap(g => g.bits));
+  const outGroups = groupsOf(nodes), outGrouped = new Set(outGroups.flatMap(g => g.bits));
+  const nodeCols = [...outGroups.flatMap(g => [...g.bits].reverse()), ...nodes.filter(k => !outGrouped.has(k))];
+  const looseInputs = design.inputs.filter(k => !inGrouped.has(k)), hasText = texts().length > 0, list = texts();
+  const head = h('tr', {},
+    ticks ? h('th', {}, 'tick') : null,
+    timed ? h('th', {}, TIME) : null,
+    hasText ? h('th', { style: 'text-align: left' }, 'context') : null,
+    inGroups.map(g => h('th', {}, g.prefix)), looseInputs.map(k => h('th', {}, k)),
+    outGroups.map(g => h('th', { class: 'group-col' }, g.prefix)),
+    nodeCols.map(k => h('th', { style: k === selected ? 'color: var(--accent)' : null }, k)));
+  const first = built.mode === 'ticks' ? Math.max(0, built.rows.length - 200) : 0;
+  const body = built.rows.map((r, i) => {
+    if (!r || i < first) return null;
+    return h('tr', { 'aria-selected': String(i === builtRow), onclick: () => { builtRow = i; renderBuilder(); } },
+      ticks ? h('td', {}, String(i + 1)) : null,
+      timed ? h('td', {}, `${r.inputs[TIME]}s`) : null,
+      hasText ? h('td', { class: 'snippet', title: r.inputs[TEXT] }, `#${list.indexOf(r.inputs[TEXT]) + 1} ${r.inputs[TEXT]}`) : null,
+      inGroups.map(g => h('td', {}, String(decode(g, r.inputs)))),
+      looseInputs.map(k => h('td', {}, String(r.inputs[k]))),
+      outGroups.map(g => {
+        const got = decode(g, r.signals), want = decode(g, r.ideal);
+        return h('td', { class: `group-col ${want == null ? '' : got === want ? 'ok' : 'bad'}`, title: want == null ? '' : `want ${want}` },
+          `${got ?? '-'}${want != null && got !== want ? ` ✗ ${want}` : ''}`);
+      }),
+      nodeCols.map(k => {
+        const want = r.ideal[k], wrong = want != null && (r.signals[k] > 0.5) !== (want > 0.5);
+        return h('td', { class: wrong ? 'bad-cell' : null, style: `background: ${heat(r.signals[k])}`,
+          title: want == null ? 'no rule to check against' : `want ${want}` },
+          fmt(r.signals[k]) + (wrong ? ' ✗' : ''));
+      }));
+  });
+  return h('table', {}, h('thead', {}, head), h('tbody', {}, body));
+}
+
+// The editor, for a node or an input. Edits apply as you make them; the panel is
+// rebuilt after each one, keeping the focus and caret of the field being typed in.
+
+function renderEditor() {
+  const panel = $('#editor-panel');
+  if (tab !== 'networks') return;
+  if (selected && design.inputs.includes(selected)) return renderInputEditor(panel);
+  const found = selected && findNode(selected);
+  if (selected === TEXT && design.contexts.length) return keepFocus(() => renderTextEditor(panel));
+  if (selected === TIME && design.time) return keepFocus(() => renderTimeEditor(panel));
+  if (!found) {
+    panel.replaceChildren(h('p', { class: 'hint', style: 'margin: 0' },
+      'Click a node or input in the diagram to edit it. The buttons under the inputs add an on/off input, time or a context, and + adds a node or layer'));
+    return;
+  }
+  keepFocus(() => renderNodeEditor(panel, found));
+}
+
+function removeSignal(name) {
+  return h('button', { onclick: () => {
+    if (name === TIME) design.time = false;
+    else if (name === TEXT) design.contexts = [];
+    else design.inputs = design.inputs.filter(k => k !== name);
+    selected = null;
+    designChanged();
+  } }, 'Delete');
+}
+
+function renderTimeEditor(panel) {
+  panel.replaceChildren(
+    h('div', { class: 'editor-head' }, h('h3', {}, TIME), removeSignal(TIME)),
+    h('label', { for: 'ed-every' }, 'Each tick is'),
+    h('div', { style: 'display: flex; align-items: center; gap: 8px' },
+      h('input', { id: 'ed-every', type: 'number', min: 0.2, step: 0.1, value: design.every, style: 'width: 90px',
+        oninput: e => { design.every = Math.max(0.2, Number(e.target.value) || 1); designChanged({ editor: false }); } }), 'seconds'),
+    h('p', { class: 'note' }, 'Time is the tick number times this, so it lands on whole seconds however late a tick starts'),
+    h('p', { class: 'note' }, 'A weighted sum of time is a comparison with a rule, such as 1 × time > 5'));
+}
+
+function renderTextEditor(panel) {
+  // A text box keeps the height it was dragged to when the editor is rebuilt.
+  const heights = Object.fromEntries([...panel.querySelectorAll('textarea')].map(t => [t.id, t.style.height]));
+  panel.replaceChildren(
+    h('div', { class: 'editor-head' }, h('h3', {}, TEXT), removeSignal(TEXT)),
+    h('p', { class: 'note', style: 'margin-top: 4px' }, 'A truth table runs each context as its own row; a tick uses the one that is on. Only a question can read the context'),
+    ...design.contexts.map((t, i) => {
+      // On is the context the next tick uses. A tick picks among the contexts that are
+      // written, so its choice counts only those.
+      const written = design.contexts.slice(0, i).filter(x => x.trim()).length, on = !!t.trim() && written === (design.current.context ?? 0);
+      return h('div', { class: 'text-row' },
+        h('button', { class: 'chip', 'aria-pressed': String(on), disabled: t.trim() ? false : '',
+          'aria-label': `Context ${i + 1} ${on ? 'is' : 'is not'} used by the next tick`,
+          onclick: () => { design.current.context = written; inputsChanged(); markTextInUse(); } }, on ? 'on' : 'off'),
+        h('textarea', { id: `text-${i}`, 'aria-label': `Context ${i + 1}`, placeholder: 'Paste a ticket, an email, a post…',
+          style: heights[`text-${i}`] ? `height: ${heights[`text-${i}`]}` : null,
+          oninput: e => { design.contexts[i] = e.target.value; designChanged({ editor: false }); } }, t),
+        design.contexts.length > 1 ? h('button', { class: 'remove', 'aria-label': `Remove context ${i + 1}`,
+          onclick: () => { design.contexts.splice(i, 1); designChanged(); } }, '×') : null);
+    }),
+    h('div', { class: 'actions', style: 'margin-top: 6px' },
+      h('button', { class: 'secondary', onclick: () => { design.contexts.push(''); designChanged(); $(`#text-${design.contexts.length - 1}`)?.focus(); } },
+        'Add another context')));
+}
+
+// Moves the on button between contexts where they are, so nothing is rebuilt.
+function markTextInUse() {
+  let written = 0;
+  design.contexts.forEach((t, i) => {
+    const button = document.querySelector(`#text-${i}`)?.previousElementSibling;
+    const on = !!t.trim() && written === (design.current.context ?? 0);
+    if (t.trim()) written++;
+    if (!button) return;
+    button.setAttribute('aria-pressed', String(on));
+    button.setAttribute('aria-label', `Context ${i + 1} ${on ? 'is' : 'is not'} used by the next tick`);
+    button.textContent = on ? 'on' : 'off';
+  });
+}
+
+function renderInputEditor(panel) {
+  const name = selected;
+  panel.replaceChildren(
+    h('div', { class: 'editor-head' }, h('h3', {}, name), removeSignal(name)),
+    h('label', { for: 'ed-name' }, 'Name'),
+    h('input', { id: 'ed-name', value: name, onchange: e => renameSignal(name, e.target.value.trim(), e.target) }),
+    h('p', { class: 'note' }, 'Name inputs a0, a1, a2… and the next tick takes them as one number'),
+    h('p', { id: 'ed-error', class: 'error', style: 'margin: 10px 0 0' }));
+}
+
+function renderNodeEditor(panel, found) {
+  const { L, node: n } = found, text = textOf(n), problem = problems()[n.name], looped = loopNodes().has(n.name);
+  const presetOptions = [
+    h('optgroup', { label: 'Preset' }, Object.keys(catalog.templates).map(g =>
+      h('option', { value: g, selected: n.preset === g ? '' : false }, g))),
+    h('option', { value: 'weighted', selected: n.preset === 'weighted' ? '' : false }, 'weighted sum'),
+    h('option', { value: 'custom', selected: n.preset === 'custom' ? '' : false }, 'custom question'),
+    Object.keys(rules()).length ? h('optgroup', { label: 'Worked out in code' }, Object.entries(rules()).map(([r, t]) =>
+      h('option', { value: r, selected: n.preset === r ? '' : false }, t.label))) : null,
+  ].filter(Boolean);
+
+  const parts = [
+    h('div', { class: 'editor-head' }, h('h3', {}, n.name), h('span', { class: 'hint' }, `layer ${L + 1}${looped ? ' · in a loop' : ''}`),
+      h('button', { onclick: () => { design.layers[L].splice(found.i, 1); selected = null; designChanged(); } }, 'Delete')),
+
+    h('label', { for: 'ed-name' }, 'Name'),
+    h('input', { id: 'ed-name', value: n.name, onchange: e => renameSignal(n.name, e.target.value.trim(), e.target) }),
+
+    h('label', {}, 'Reads'),
+    h('div', { class: 'signals' }, signalNames().map(src => {
+      const at = n.reads.indexOf(src);
+      return h('button', { class: 'chip', id: `ed-r-${src}`, 'aria-pressed': String(at >= 0), onclick: () => toggleRead(n, src) },
+        src === n.name ? `${src} (self)` : src, at >= 0 && n.reads.length > 1 ? h('span', { class: 'order' }, String(at + 1)) : null);
+    })),
+
+    h('label', { for: 'ed-preset' }, 'Asks'),
+    h('select', { id: 'ed-preset', onchange: e => setPreset(n, e.target.value) }, presetOptions),
+  ];
+
+  if (n.preset === 'atLeast') {
+    parts.push(h('label', { for: 'ed-n' }, 'How many'),
+      h('input', { id: 'ed-n', type: 'number', min: 1, max: n.reads.length, step: 1, value: n.n ?? 1,
+        oninput: e => { n.n = Math.floor(Number(e.target.value)); designChanged({ editor: false }); refreshText(n); } }));
+  }
+  if (n.preset === 'average') {
+    parts.push(h('label', {}, 'Weights'),
+      h('div', { class: 'weights' }, n.reads.flatMap((src, i) => [
+        h('span', {}, src),
+        h('input', { id: `ed-w-${src}`, type: 'number', step: 0.1, min: 0, value: n.weights[i],
+          oninput: e => { n.weights[i] = Number(e.target.value); designChanged({ editor: false }); refreshText(n); } }),
+      ])));
+  }
+
+  if (n.preset === 'weighted') {
+    parts.push(h('label', {}, 'Weights'),
+      h('div', { class: 'weights' }, n.reads.flatMap((src, i) => [
+        h('span', {}, src),
+        h('input', { id: `ed-w-${src}`, type: 'number', step: 0.1, value: n.weights[i],
+          oninput: e => { n.weights[i] = Number(e.target.value); designChanged({ editor: false }); refreshText(n); } }),
+      ]), h('span', {}, 'bias'),
+        h('input', { id: 'ed-bias', type: 'number', step: 0.1, value: n.bias,
+          oninput: e => { n.bias = Number(e.target.value); designChanged({ editor: false }); refreshText(n); } })));
+  }
+
+  if (looped) {
+    parts.push(h('label', {}, 'Initial state', h('span', { style: 'font-weight: 400' }, ' · before a loop is first asked')),
+      h('div', { class: 'signals' }, [0, 1].map(v => h('button', { class: 'chip', 'aria-pressed': String((n.start ?? 0) === v),
+        onclick: () => { n.start = v; designChanged(); } }, v ? 'on' : 'off'))));
+  }
+
+  if (isRule(n.preset)) parts.push(
+    h('label', {}, 'Works out'),
+    h('p', { id: 'ed-q', class: 'rule-text' }, text.instructions),
+    h('p', { class: 'note rule' }, 'Worked out in code, so it costs no call and is exact'),
+    problem ? h('p', { class: 'error', style: 'margin: 10px 0 0' }, `${n.name} ${problem}`) : null,
+    h('p', { id: 'ed-error', class: 'error', style: 'margin: 10px 0 0' }),
+  );
+  else parts.push(
+    h('label', { for: 'ed-q' }, 'Question'),
+    h('textarea', { id: 'ed-q', oninput: e => editText(n, 'instructions', e.target.value) }),
+    h('label', { for: 'ed-yes' }, 'Yes means'),
+    h('input', { id: 'ed-yes', value: text.yes, oninput: e => editText(n, 'yes', e.target.value) }),
+    h('label', { for: 'ed-no' }, 'No means'),
+    h('input', { id: 'ed-no', value: text.no, oninput: e => editText(n, 'no', e.target.value) }),
+    n.preset === 'custom' ? h('p', { class: 'note' }, "A custom question has no rule, so the simulator can't answer it")
+      : n.preset === 'weighted' ? h('p', { class: 'note' }, 'Jev is asked to do the sum itself')
+      : h('p', { class: 'note rule' }, 'Written from the preset'),
+    problem ? h('p', { class: 'error', style: 'margin: 10px 0 0' }, `${n.name} ${problem}`) : null,
+    h('p', { id: 'ed-error', class: 'error', style: 'margin: 10px 0 0' }),
+  );
+
+  panel.replaceChildren(...parts.filter(x => x != null));
+  if (!isRule(n.preset)) $('#ed-q').value = text.instructions;
+}
+
+function refreshText(n) {
+  const text = textOf(n);
+  if (isRule(n.preset)) { $('#ed-q').textContent = text.instructions; return; }
+  $('#ed-q').value = text.instructions; $('#ed-yes').value = text.yes; $('#ed-no').value = text.no;
+}
+
+function toggleRead(n, src) {
+  const at = n.reads.indexOf(src);
+  if (at >= 0) { n.reads.splice(at, 1); n.weights?.splice(at, 1); }
+  else { n.reads.push(src); n.weights?.push(1); }
+  designChanged();
+}
+
+function setPreset(n, preset) {
+  // Keep the question it was asking; a rule was asking none.
+  if (preset === 'custom') Object.assign(n, isRule(n.preset) ? { instructions: '', yes: '', no: '' } : textOf(n));
+  if (preset === 'weighted' && n.preset !== 'weighted') { n.weights = n.reads.map(() => 1); n.bias = n.reads.length - 0.5; }
+  if (preset === 'average' && n.preset !== 'average') n.weights = n.reads.map(() => 1);
+  if (preset === 'atLeast') n.n = Math.min(Math.max(1, n.n ?? 2), Math.max(1, n.reads.length));
+  n.preset = preset;
+  designChanged();
+}
+
+// Typing in a preset's question makes it custom, starting from the words it had.
+function editText(n, field, value) {
+  const wasPreset = n.preset !== 'custom';
+  if (wasPreset) { Object.assign(n, textOf(n)); n.preset = 'custom'; }
+  n[field] = value;
+  designChanged({ editor: wasPreset });
+}
+
+function renameSignal(old, name, input) {
+  if (name === old) return;
+  const taken = [...design.inputs, TEXT, TIME, ...allNodes().map(x => x.name)];
+  const error = !NODE_NAME.test(name) ? 'A name is a lowercase letter, then up to 11 letters, digits or _'
+    : taken.includes(name) ? `${name} is already taken` : null;
+  if (error) { $('#ed-error').textContent = error; input.value = old; return; }
+
+  const word = new RegExp(`\\b${old}\\b`, 'g');
+  for (const x of allNodes()) {
+    if (!x.reads.includes(old)) continue;
+    x.reads = x.reads.map(r => r === old ? name : r);
+    if (x.preset === 'custom') for (const f of ['instructions', 'yes', 'no']) x[f] = x[f].replace(word, name);
+  }
+  const node = findNode(old);
+  if (node) node.node.name = name;
+  else {
+    design.inputs = design.inputs.map(k => k === old ? name : k);
+    if (old in design.current.inputs) { design.current.inputs[name] = design.current.inputs[old]; delete design.current.inputs[old]; }
+  }
+  selected = name;
+  designChanged();
+}
+
+function setMode(isFake) {
+  fake = isFake;
+  $('#mode-jev').setAttribute('aria-pressed', String(!fake));
+  $('#mode-fake').setAttribute('aria-pressed', String(fake));
+  renderActions();
+}
+$('#mode-jev').onclick = () => setMode(false);
+$('#mode-fake').onclick = () => setMode(true);
+
+// The key you type goes to the server with each run, and is kept only in this tab's session
+// storage: it is gone when the tab closes, and never saved with the design.
+const keyStore = {
+  get: name => { try { return sessionStorage.getItem(`jev-${name}`) ?? ''; } catch { return ''; } },
+  set: (name, value) => { try { sessionStorage.setItem(`jev-${name}`, value); } catch {} },
+};
+function runHeaders() {
+  const headers = { 'Content-Type': 'application/json' }, key = $('#api-key').value.trim();
+  if (key) Object.assign(headers, { 'X-Jev-Key': key, 'X-Jev-Provider': $('#provider').value });
+  return headers;
+}
+// A server that takes a key says which providers, and which it holds a key for itself.
+function showKey(providers) {
+  if (!providers) return;
+  const select = $('#provider'), input = $('#api-key');
+  select.replaceChildren(...Object.entries(providers).map(([id, p]) => h('option', { value: id }, p.label)));
+  if (keyStore.get('provider') in providers) select.value = keyStore.get('provider');
+  input.value = keyStore.get('key');
+  const hint = () => { input.placeholder = providers[select.value]?.server ? 'Your API key, or the server\'s' : 'Your API key'; };
+  select.onchange = () => { keyStore.set('provider', select.value); hint(); };
+  input.oninput = () => keyStore.set('key', input.value.trim());
+  hint();
+  $('#key').hidden = false;
+}
+
+fetch('api/catalog').then(r => r.json()).then(c => {
+    catalog = c;
+    showKey(c.providers);
+    design = loadDesign();
+    if (design.preset in catalog.graphs || design.preset === 'blank') form.network = design.preset;
+    showTab();
+  })
+  .catch(e => $('#result').replaceChildren(h('p', { class: 'error' }, `Could not reach the server: ${e.message}`)));
+</script>
+</body>
+</html>

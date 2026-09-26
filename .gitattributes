@@ -1,0 +1,2 @@
+# LF everywhere: Pint and PSR-12 expect it, and a checkout with core.autocrlf would write CRLF.
+* text=auto eol=lf

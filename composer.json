@@ -1,0 +1,49 @@
+{
+    "name": "phox/composable-jev-demo",
+    "description": "A page for building Jev graphs in a browser with phox/composable-jev, and the server behind it",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Fox Islam",
+            "email": "foxislam@outlook.com"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "ext-json": "*",
+        "phox/composable-jev": "^1.0",
+        "phox/typesafe-sdk-php": "^0.4.2"
+    },
+    "require-dev": {
+        "guzzlehttp/guzzle": "^7.9",
+        "laravel/pint": "^1.18",
+        "pestphp/pest": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Phox\\ComposableJevDemo\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "lint": "pint --test",
+        "serve": [
+            "Composer\\Config::disableProcessTimeout",
+            "PHP_CLI_SERVER_WORKERS=4 php -S 127.0.0.1:8765 public/index.php"
+        ]
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
