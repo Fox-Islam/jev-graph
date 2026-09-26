@@ -1,6 +1,6 @@
 # JevGraph
 
-Semantic computation engine
+Semantic computation engine, deployed [here](https://jevgraph.lexic.cloud/)
 
 A page for building [composable-jev](https://github.com/Fox-Islam/composable-jev) graphs in a
 browser, and the PHP server behind it. Add inputs and nodes in the diagram, edit them in the side
